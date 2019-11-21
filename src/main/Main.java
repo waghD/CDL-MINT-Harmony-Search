@@ -20,7 +20,6 @@ import timeSeries.TimeSeriesDatabase;
 
 public class Main {
 	private static TimeSeriesDatabase db = null;
-	private static int counter =0;
 
 	public static void main(String[] args) {
 
@@ -77,7 +76,6 @@ public class Main {
 						newSolution[j] = hpa.getSolutions()[rand.nextInt(hpa.getSolutions().length)][j];
 						if(rand.nextDouble() < hpa.getR_pa()) {
 							newSolution[j] = newSolution[j] + ThreadLocalRandom.current().nextDouble(0, 1) * hpa.getBand();
-						
 						}
 					} else {
 						newSolution[j] =  ThreadLocalRandom.current().nextDouble(0, hpa.getBand());
@@ -157,7 +155,7 @@ public class Main {
 	         System.out.printf("\n%.8f ", solutions[i][j]);
 	        
 	      }
-	      List<EvaluationResult> solutionEvalResults = fiveStreams("./lib/realStates_156.csv", solutions[i][0], solutions[i][1]);
+	      List<EvaluationResult> solutionEvalResults = evaluateStream("./lib/realStates_156.csv", solutions[i][0], solutions[i][1], StreamCount.FIVE);
 	      for(EvaluationResult solEvalResult : solutionEvalResults) {
 	        	 System.out.printf("\n=> %s: Precision: %.2f  Recall: %.2f", solEvalResult.getState(), solEvalResult.getPrecision(), solEvalResult.getRecall());
 	      }
@@ -167,13 +165,13 @@ public class Main {
 	public static double[][] evalSolution(double[] solution, double[][] solutions, String realStatesFilePath, boolean printActions) {
 		List<ArrayList<EvaluationResult>> evalResults = new ArrayList<ArrayList<EvaluationResult>>();
 		for(int i = 0; i < solutions.length; i++) {
-			evalResults.add((ArrayList<EvaluationResult>) fiveStreams(realStatesFilePath, solutions[i][0], solutions[i][1]));
+			evalResults.add((ArrayList<EvaluationResult>) evaluateStream(realStatesFilePath, solutions[i][0], solutions[i][1], StreamCount.FIVE));
 			//System.out.println("(" + solutions[i][0] + "," + solutions[i][1] + ") => " + func(solutions[i][0], solutions[i][1]));
 		}
 	
 		List<EvaluationResult> worstResult = findWorstEvalResult(evalResults);
 		
-		List<EvaluationResult> newResult = fiveStreams(realStatesFilePath, solution[0], solution[1]);
+		List<EvaluationResult> newResult = evaluateStream(realStatesFilePath, solution[0], solution[1], StreamCount.FIVE);
 		if(printActions)
 			System.out.println("New solution: (" + solution[0] + "," + solution[1] + ") => " + newResult);
 		if(cmpListEvalResults(newResult, worstResult) > 0) {
@@ -195,12 +193,11 @@ public class Main {
 		}
 		return worstEvalResult;
 	}
+	
 	/**
-	 *
-	 * 
 	 * @param evalList1
 	 * @param evalList2
-	 * @return 1 if evalList1 carries better results, -1 if evalList2 carries beter results, 0 if results are equal in both lists
+	 * @return 1 if evalList1 carries better results, -1 if evalList2 carries better results, 0 if results are equal in both lists
 	 */
 	private static int cmpListEvalResults(List<EvaluationResult> evalList1, List<EvaluationResult> evalList2) {
 		double avgPrecisionList1 = 0;
@@ -244,212 +241,13 @@ public class Main {
 		}
 	}
 
-	private static List<EvaluationResult> singleStream(String filenameReal, double devLower, double devUpper) {
+	private static List<EvaluationResult> evaluateStream(String filenameReal, double devLower, double devUpper, StreamCount streamCount) {
 		// Test State Identification
 		Evaluation eval = new Evaluation();
 		// SetUp all information about the states in the files
-		eval.setUpRealDataSingleStream(filenameReal);
-	
-		return evaluate(eval, db, setUpDataSingleStream(), devLower, devUpper);
-	
+		eval.setUpRealDataStream(filenameReal, streamCount);
 
-	}
-
-	private static void threeStreams(String filenameReal, double evalSymDevationVal) {
-		// Test State Identification
-		Evaluation eval = new Evaluation();
-		// SetUp all information about the states in the files
-		eval.setUpRealDataThreeStreams(filenameReal);
-
-		System.out.println(evaluate(eval, db, setUpDataThreeStreams(), evalSymDevationVal));
-
-	}
-
-	private static  List<EvaluationResult>  fiveStreams(String filenameReal, double devLower, double devUpper) {
-		// Test State Identification
-		Evaluation eval = new Evaluation();
-		// SetUp all information about the states in the files
-		eval.setUpRealDataFiveStreams(filenameReal);
-
-		return evaluate(eval, db, setUpDataFiveStreams(),  devLower, devUpper);
-
-	}
-	//List<Double> harmonics, double r_pa, double pitch_lower_bound, double pitch_upper_bound, double r_accept
-	private static List<EvaluationResult> evaluateWithHarmony(Evaluation eval, TimeSeriesDatabase db, Block roboticArm) {
-		ArrayList<IdentifiedState> recStates = new ArrayList<IdentifiedState>();
-		int nrOfIterations = 20;
-		Map<String, Boundaries<Double, Double>> harmonics = new HashMap<String, Boundaries<Double, Double>>();
-		// Initialize start harmonics for each state
-		for(State s : roboticArm.getAssignedState()) {
-			harmonics.put(s.getName(), new Boundaries<Double,Double>(0.1,0.1));
-		}
-		HarmonyParameters harmonyParam = new HarmonyParameters(0.3, 0.5, 0.1, 1, 0.7);
-		for(int i = 0; i < nrOfIterations; i++) {
-			recStates = eval.testRecognitionWithHarmony(db, roboticArm, harmonics, harmonyParam);
-			List<EvaluationResult> allResults = new ArrayList<EvaluationResult>();
-			PrintWriter pw;
-			String dir = "modelTest/";
-			String filename = "result"+counter+".csv";
-			String path = dir+filename;
-			try {
-				File f = new File(dir,filename);
-				f.createNewFile();
-				pw = new PrintWriter(new File(path));
-				String row ="";
-				Collections.sort(recStates);
-				int countProcess =0;
-				for (IdentifiedState identifiedState : recStates) {
-					if(identifiedState.getName().equals("DriveDown")) {
-						countProcess++;	
-					}
-					row = countProcess+";"+identifiedState.getName()+ ";"+identifiedState.getTs().toString()+"\n";
-					pw.write(row);
-				}
-		        pw.close();
-		        counter++;
-		    } catch (FileNotFoundException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-	        // Calculate Precision and Recall
-			allResults.addAll(eval.calculatePrecisionRecall(recStates));
-		}
-
-		return allResults;
-	}
-
-	private static List<EvaluationResult> evaluate(Evaluation eval, TimeSeriesDatabase db, Block roboticArm, double devLower, double devUpper) {
-		ArrayList<IdentifiedState> recStates = new ArrayList<IdentifiedState>();
-			recStates = eval.testRecognition(db, roboticArm, devLower, devUpper);
-			List<EvaluationResult> allResults = new ArrayList<EvaluationResult>();
-			PrintWriter pw;
-			String dir = "modelTest/";
-			String filename = "result"+counter+".csv";
-			String path = dir+filename;
-			try {
-				File f = new File(dir,filename);
-				f.createNewFile();
-				pw = new PrintWriter(new File(path));
-				String row ="";
-				Collections.sort(recStates);
-				int countProcess =0;
-				for (IdentifiedState identifiedState : recStates) {
-					if(identifiedState.getName().equals("DriveDown")) {
-						countProcess++;	
-					}
-					row = countProcess+";"+identifiedState.getName()+ ";"+identifiedState.getTs().toString()+"\n";
-					pw.write(row);
-				}
-		        pw.close();
-		        counter++;
-		    } catch (FileNotFoundException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-	        // Calculate Precision and Recall
-			allResults.addAll(eval.calculatePrecisionRecall(recStates));
-		
-
-		return allResults;
-	}
-
-	private static Block setUpDataSingleStream() {
-		// setUp Information for state DriveDown
-		Property p1 = new Property("gp", 1.5);
-
-		List<Property> props1 = new ArrayList<Property>();
-		props1.add(p1);
-		State s1 = new State("DriveDown", props1);
-
-		// setUp Information for state PickUp
-		Property p2 = new Property("gp", -0.4);
-		List<Property> props2 = new ArrayList<Property>();
-		props2.add(p2);
-		State s2 = new State("PickUp", props2);
-
-		// List states
-		List<State> states = new ArrayList<State>();
-		states.add(s1);
-		states.add(s2);
-
-		// SetUp Block
-		Block roboticArm = new Block("roboticArm", states);
-		return roboticArm;
-	}
-
-	private static Block setUpDataThreeStreams() {
-		// setUp Information for state DriveDown
-		Property p1 = new Property("bp", 0);
-		Property p2 = new Property("map", 1.5);
-		Property p3 = new Property("gp", 1.5);
-
-		List<Property> props1 = new ArrayList<Property>();
-		props1.add(p1);
-		props1.add(p2);
-		props1.add(p3);
-		State s1 = new State("DriveDown", props1);
-
-		// setUp Information for state PickUp
-		Property p4 = new Property("bp", 0);
-		Property p5 = new Property("map", 1.5);
-		Property p6 = new Property("gp", -0.4);
-
-		List<Property> props2 = new ArrayList<Property>();
-		props2.add(p4);
-		props2.add(p5);
-		props2.add(p6);
-		State s2 = new State("PickUp", props2);
-
-		// List states
-		List<State> states = new ArrayList<State>();
-		states.add(s1);
-		states.add(s2);
-
-		// SetUp Block
-		Block roboticArm = new Block("roboticArm", states);
-		return roboticArm;
-	}
-
-	private static Block setUpDataFiveStreams() {
-		// setUp Information for state DriveDown
-		Property p1 = new Property("bp", 0);
-		Property p2 = new Property("map", 1.5);
-		Property p3 = new Property("gp", 1.5);
-		Property p4 = new Property("sap", -0.12);
-		Property p5 = new Property("wp", 0);
-
-		List<Property> props1 = new ArrayList<Property>();
-		props1.add(p1);
-		props1.add(p2);
-		props1.add(p3);
-		props1.add(p4);
-		props1.add(p5);
-		State s1 = new State("DriveDown", props1);
-
-		// setUp Information for state PickUp
-		Property p6 = new Property("bp", 0);
-		Property p7 = new Property("map", 1.5);
-		Property p8 = new Property("gp", -0.4);
-		Property p9 = new Property("sap", -0.12);
-		Property p10 = new Property("wp", 0);
-		List<Property> props2 = new ArrayList<Property>();
-		props2.add(p6);
-		props2.add(p7);
-		props2.add(p8);
-		props2.add(p9);
-		props2.add(p10);
-		State s2 = new State("PickUp", props2);
-
-		// List states
-		List<State> states = new ArrayList<State>();
-		states.add(s1);
-		states.add(s2);
-
-		// SetUp Block
-		Block roboticArm = new Block("roboticArm", states);
-		return roboticArm;
+		return eval.evaluate(TestData.setUpDataStream(streamCount), devLower, devUpper);
 	}
 
 }

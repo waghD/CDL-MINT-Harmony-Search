@@ -1,9 +1,11 @@
 package main;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -11,6 +13,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,36 +25,84 @@ import design.State;
 import runtime.IdentifiedState;
 import timeSeries.TimeSeriesDatabase;
 
-
 public class Evaluation {
+	private static int counter = 0;
 	private List<IdentifiedState> realStates = new ArrayList<IdentifiedState>();
-	
+
 	private static final DateTimeFormatter ISO8601_FORMATTER = new DateTimeFormatterBuilder()
-		    .appendPattern("yyyy-MM-dd'T'HH:mm:ss")
-		    .appendFraction(ChronoField.MICRO_OF_SECOND, 0, 6, true)
-		    .appendPattern("X")
-		    .toFormatter();
+			.appendPattern("yyyy-MM-dd'T'HH:mm:ss").appendFraction(ChronoField.MICRO_OF_SECOND, 0, 6, true)
+			.appendPattern("X").toFormatter();
+
+	public List<EvaluationResult> evaluate(Block roboticArm, double devLower, double devUpper) {
+		ArrayList<IdentifiedState> recStates = new ArrayList<IdentifiedState>();
+		recStates = this.testRecognition(roboticArm, devLower, devUpper);
+		List<EvaluationResult> allResults = new ArrayList<EvaluationResult>();
+		PrintWriter pw;
+		String dir = "modelTest/";
+		String filename = "result" + counter + ".csv";
+		String path = dir + filename;
+		try {
+			File f = new File(dir, filename);
+			f.createNewFile();
+			pw = new PrintWriter(new File(path));
+			String row = "";
+			Collections.sort(recStates);
+			int countProcess = 0;
+			for (IdentifiedState identifiedState : recStates) {
+				if (identifiedState.getName().equals("DriveDown")) {
+					countProcess++;
+				}
+				row = countProcess + ";" + identifiedState.getName() + ";" + identifiedState.getTs().toString() + "\n";
+				pw.write(row);
+			}
+			pw.close();
+			counter++;
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		// Calculate Precision and Recall
+		allResults.addAll(this.calculatePrecisionRecall(recStates));
+
+		return allResults;
+	}
 	
-	public void setUpRealDataSingleStream(String filename) {
+	public void setUpRealDataStream(String filename, StreamCount streamCount) {
+		switch (streamCount) {
+		case FIVE:
+			this.setUpRealDataFiveStreams(filename);
+			break;
+		case THREE:
+			this.setUpRealDataThreeStreams(filename);
+			break;
+		case SINGLE:
+		default:
+			this.setUpRealDataSingleStream(filename);
+			break;
+		}
+	}
+
+	private void setUpRealDataSingleStream(String filename) {
 		String csvFile = filename;
-        String line = "";
-        String cvsSplitBy = ";";
+		String line = "";
+		String cvsSplitBy = ";";
 		BufferedReader br = null;
 		try {
-			
-			br = new BufferedReader(new FileReader(csvFile));
-            while ((line = br.readLine()) != null) {
-            	
-                String[] information = line.split(cvsSplitBy);
-                String[] split = information[0].split("\\.");
-                String timestamp = split[2]+"-"+split[1]+"-"+split[0] + "T" + information[1]+"Z";
-                double gp = Double.parseDouble(information[6]);
-                String statename = information[7];
 
-                IdentifiedState s = new IdentifiedState();
+			br = new BufferedReader(new FileReader(csvFile));
+			while ((line = br.readLine()) != null) {
+
+				String[] information = line.split(cvsSplitBy);
+				String[] split = information[0].split("\\.");
+				String timestamp = split[2] + "-" + split[1] + "-" + split[0] + "T" + information[1] + "Z";
+				double gp = Double.parseDouble(information[6]);
+				String statename = information[7];
+
+				IdentifiedState s = new IdentifiedState();
 				s.setName(statename);
-				Property p1 = new Property("gp",gp);
-				
+				Property p1 = new Property("gp", gp);
+
 				List<Property> properties = new ArrayList<Property>();
 				properties.add(p1);
 				s.setProperties(properties);
@@ -59,47 +110,47 @@ public class Evaluation {
 				LocalDateTime ldt = LocalDateTime.ofInstant(instant, ZoneId.from(ISO8601_FORMATTER.parse(timestamp)));
 				s.setTimestamp(ldt.toString());
 				realStates.add(s);
-            }
+			}
 
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            if (br != null) {
-                try {
-                    br.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (br != null) {
+				try {
+					br.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 	}
-	
-	public void setUpRealDataThreeStreams(String filename) {
+
+	private void setUpRealDataThreeStreams(String filename) {
 		String csvFile = filename;
-        String line = "";
-        String cvsSplitBy = ";";
+		String line = "";
+		String cvsSplitBy = ";";
 		BufferedReader br = null;
 		try {
-			
-			br = new BufferedReader(new FileReader(csvFile));
-            while ((line = br.readLine()) != null) {
-            	
-                String[] information = line.split(cvsSplitBy);
-                String[] split = information[0].split("\\.");
-                String timestamp = split[2]+"-"+split[1]+"-"+split[0] + "T" + information[1]+"Z";
-                double bp = Double.parseDouble(information[2]);
-                double map = Double.parseDouble(information[3]);
-                double gp = Double.parseDouble(information[6]);
-                String statename = information[7];
 
-                IdentifiedState s = new IdentifiedState();
+			br = new BufferedReader(new FileReader(csvFile));
+			while ((line = br.readLine()) != null) {
+
+				String[] information = line.split(cvsSplitBy);
+				String[] split = information[0].split("\\.");
+				String timestamp = split[2] + "-" + split[1] + "-" + split[0] + "T" + information[1] + "Z";
+				double bp = Double.parseDouble(information[2]);
+				double map = Double.parseDouble(information[3]);
+				double gp = Double.parseDouble(information[6]);
+				String statename = information[7];
+
+				IdentifiedState s = new IdentifiedState();
 				s.setName(statename);
-				Property p1 = new Property("bp",bp);
-				Property p2 = new Property("map",map);
-				Property p3 = new Property("gp",gp);
-				
+				Property p1 = new Property("bp", bp);
+				Property p2 = new Property("map", map);
+				Property p3 = new Property("gp", gp);
+
 				List<Property> properties = new ArrayList<Property>();
 				properties.add(p1);
 				properties.add(p2);
@@ -109,49 +160,49 @@ public class Evaluation {
 				LocalDateTime ldt = LocalDateTime.ofInstant(instant, ZoneId.from(ISO8601_FORMATTER.parse(timestamp)));
 				s.setTimestamp(ldt.toString());
 				realStates.add(s);
-            }
+			}
 
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            if (br != null) {
-                try {
-                    br.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (br != null) {
+				try {
+					br.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 	}
-	
-	public void setUpRealDataFiveStreams(String filename) {
+
+	private void setUpRealDataFiveStreams(String filename) {
 		String line = "";
-        String cvsSplitBy = ";";
+		String cvsSplitBy = ";";
 		BufferedReader br = null;
 		try {
-			
+
 			br = new BufferedReader(new FileReader(filename));
-            while ((line = br.readLine()) != null) {
+			while ((line = br.readLine()) != null) {
 
-                String[] information = line.split(cvsSplitBy);
-                String[] split = information[0].split("\\.");
-                String timestamp = split[2]+"-"+split[1]+"-"+split[0] + "T" + information[1]+"Z";
-                double bp = Double.parseDouble(information[2]);
-                double map = Double.parseDouble(information[3]);
-                double sap = Double.parseDouble(information[4]);
-                double wp = Double.parseDouble(information[5]);
-                double gp = Double.parseDouble(information[6]);
-                String statename = information[7];
+				String[] information = line.split(cvsSplitBy);
+				String[] split = information[0].split("\\.");
+				String timestamp = split[2] + "-" + split[1] + "-" + split[0] + "T" + information[1] + "Z";
+				double bp = Double.parseDouble(information[2]);
+				double map = Double.parseDouble(information[3]);
+				double sap = Double.parseDouble(information[4]);
+				double wp = Double.parseDouble(information[5]);
+				double gp = Double.parseDouble(information[6]);
+				String statename = information[7];
 
-                IdentifiedState s = new IdentifiedState();
+				IdentifiedState s = new IdentifiedState();
 				s.setName(statename);
-				Property p1 = new Property("bp",bp);
-				Property p2 = new Property("map",map);
-				Property p3 = new Property("gp",gp);
-				Property p4 = new Property("sap",sap);
-				Property p5 = new Property("wp",wp);
+				Property p1 = new Property("bp", bp);
+				Property p2 = new Property("map", map);
+				Property p3 = new Property("gp", gp);
+				Property p4 = new Property("sap", sap);
+				Property p5 = new Property("wp", wp);
 				List<Property> properties = new ArrayList<Property>();
 				properties.add(p1);
 				properties.add(p2);
@@ -163,37 +214,30 @@ public class Evaluation {
 				LocalDateTime ldt = LocalDateTime.ofInstant(instant, ZoneId.from(ISO8601_FORMATTER.parse(timestamp)));
 				s.setTimestamp(ldt.toString());
 				realStates.add(s);
-            }
+			}
 
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            if (br != null) {
-                try {
-                    br.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (br != null) {
+				try {
+					br.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
 	}
-	
-	
-	public ArrayList<IdentifiedState> testRecognition(TimeSeriesDatabase db, Block b, double devLower, double devUpper) {
+
+	public ArrayList<IdentifiedState> testRecognition(Block b, double devLower, double devUpper) {
+		TimeSeriesDatabase db = TimeSeriesDatabase.instance;
+		if (db == null)
+			return new ArrayList<IdentifiedState>();
 		ArrayList<IdentifiedState> result = new ArrayList<IdentifiedState>();
 		for (State s : b.getAssignedState()) {
 			result.addAll(db.recognizeState(s.getName(), s.getAssignedProperties(), devLower, devUpper));
-		}
-		return result;
-	}
-	
-	public ArrayList<IdentifiedState> testRecognitionWithHarmony(TimeSeriesDatabase db, Block b, Map<String, Boundaries<Double, Double>> harmonics, HarmonyParameters hp) {
-		ArrayList<IdentifiedState> result = new ArrayList<IdentifiedState>();
-		for (State s : b.getAssignedState()) {
-			
-			result.addAll(db.recognizeState(s.getName(), s.getAssignedProperties(), harmonics.get(s.getName()), hp));
 		}
 		return result;
 	}
@@ -205,82 +249,79 @@ public class Evaluation {
 	public void setRealStates(List<IdentifiedState> realStates) {
 		this.realStates = realStates;
 	}
-	
-	
+
 	public List<EvaluationResult> calculatePrecisionRecall(List<IdentifiedState> recognizedStates) {
 		// all states based on their name
 		HashMap<String, List<IdentifiedState>> statesReal = new HashMap<String, List<IdentifiedState>>();
 		for (IdentifiedState s : realStates) {
-			if(statesReal.containsKey(s.getName())) {
+			if (statesReal.containsKey(s.getName())) {
 				List<IdentifiedState> existing = statesReal.get(s.getName());
 				existing.add(s);
-				statesReal.put(s.getName(),existing);
-			}
-			else {
+				statesReal.put(s.getName(), existing);
+			} else {
 				List<IdentifiedState> existing = new ArrayList<IdentifiedState>();
 				existing.add(s);
-				statesReal.put(s.getName(),existing);
+				statesReal.put(s.getName(), existing);
 			}
 		}
 		HashMap<String, List<IdentifiedState>> statesRecognized = new HashMap<String, List<IdentifiedState>>();
 		for (IdentifiedState s : recognizedStates) {
-			if(statesRecognized.containsKey(s.getName())) {
+			if (statesRecognized.containsKey(s.getName())) {
 				List<IdentifiedState> existing = statesRecognized.get(s.getName());
 				existing.add(s);
-				statesRecognized.put(s.getName(),existing);
-			}
-			else {
+				statesRecognized.put(s.getName(), existing);
+			} else {
 				List<IdentifiedState> existing = new ArrayList<IdentifiedState>();
 				existing.add(s);
-				statesRecognized.put(s.getName(),existing);
+				statesRecognized.put(s.getName(), existing);
 			}
 		}
 		List<EvaluationResult> result = new ArrayList<EvaluationResult>();
 		for (Entry<String, List<IdentifiedState>> entry : statesRecognized.entrySet()) {
-		    String statename= entry.getKey();
-		    List<IdentifiedState> val= entry.getValue();
-		    result.add(calculatePrecisionRecall(statename,val,statesReal));
-		
+			String statename = entry.getKey();
+			List<IdentifiedState> val = entry.getValue();
+			result.add(calculatePrecisionRecall(statename, val, statesReal));
+
 		}
 		return result;
-		
-		
+
 	}
-	
-	private EvaluationResult calculatePrecisionRecall(String statename, List<IdentifiedState> recognizedStates, HashMap<String, List<IdentifiedState>> statesReal) {
-		int intersection=0;
-		boolean noMatch=false;
-		//look
+
+	private EvaluationResult calculatePrecisionRecall(String statename, List<IdentifiedState> recognizedStates,
+			HashMap<String, List<IdentifiedState>> statesReal) {
+		int intersection = 0;
+		boolean noMatch = false;
+		// look
 		for (IdentifiedState s : recognizedStates) {
-			if(statesReal.get(statename).contains(s)) {
+			if (statesReal.get(statename).contains(s)) {
 				intersection++;
 			}
-			if(s.getTimestamp().equals("")) {
-				noMatch=true;
+			if (s.getTimestamp().equals("")) {
+				noMatch = true;
 			}
 		}
-		//calculate precision,recall,F-Measure
+		// calculate precision,recall,F-Measure
 		double precision;
-		if(noMatch) {
-			precision = calculatePrecision(intersection, 0);	
-		}
-		else {
+		if (noMatch) {
+			precision = calculatePrecision(intersection, 0);
+		} else {
 			precision = calculatePrecision(intersection, recognizedStates.size());
-		}		
+		}
 		double recall = calculateRecall(intersection, statesReal.get(statename).size());
-		double fMeasure = calculateFMeasure(precision,recall);
+		double fMeasure = calculateFMeasure(precision, recall);
 		EvaluationResult result = new EvaluationResult(statename, precision, recall, fMeasure);
 		return result;
 	}
-	
+
 	private double calculatePrecision(double intersection, double retrieved) {
-		return intersection/retrieved;
+		return intersection / retrieved;
 	}
-	
+
 	private double calculateRecall(double intersection, double relevant) {
-		return intersection/relevant;
+		return intersection / relevant;
 	}
+
 	private double calculateFMeasure(double precision, double recall) {
-		return 2* (precision*recall)/(precision+recall);
+		return 2 * (precision * recall) / (precision + recall);
 	}
 }

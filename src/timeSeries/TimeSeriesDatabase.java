@@ -32,6 +32,8 @@ import main.HarmonyParameters;
 import runtime.IdentifiedState;
 
 public class TimeSeriesDatabase {
+	
+	public static TimeSeriesDatabase instance = null;
 
 	private String dbName = "state_identification";
 	private InfluxDB influxDB;
@@ -45,6 +47,7 @@ public class TimeSeriesDatabase {
 		this.influxDB.deleteDatabase(dbName);
 		this.influxDB.createDatabase(dbName);
 		this.influxDB.setDatabase(dbName);
+		TimeSeriesDatabase.instance = this;
 	}
 
 	public void setUpData(String filename, boolean longRun, int timespan) {
