@@ -16,7 +16,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 
 import design.Block;
@@ -26,12 +25,25 @@ import runtime.IdentifiedState;
 import timeSeries.TimeSeriesDatabase;
 
 public class Evaluation {
+
+	public static Evaluation instance = null;
+
 	private static int counter = 0;
 	private List<IdentifiedState> realStates = new ArrayList<IdentifiedState>();
+
+	private String realDataFilename;
 
 	private static final DateTimeFormatter ISO8601_FORMATTER = new DateTimeFormatterBuilder()
 			.appendPattern("yyyy-MM-dd'T'HH:mm:ss").appendFraction(ChronoField.MICRO_OF_SECOND, 0, 6, true)
 			.appendPattern("X").toFormatter();
+
+	public Evaluation() {
+		Evaluation.instance = this;
+	}
+
+	public Evaluation(String realDataFileName) {
+		this.realDataFilename = realDataFileName;
+	}
 
 	public List<EvaluationResult> evaluate(Block roboticArm, double devLower, double devUpper) {
 		ArrayList<IdentifiedState> recStates = new ArrayList<IdentifiedState>();
@@ -67,8 +79,11 @@ public class Evaluation {
 
 		return allResults;
 	}
-	
-	public void setUpRealDataStream(String filename, StreamCount streamCount) {
+
+	public void setUpRealDataStream(StreamCount streamCount) {
+		if (this.realDataFilename == null)
+			return;
+		String filename = this.realDataFilename;
 		switch (streamCount) {
 		case FIVE:
 			this.setUpRealDataFiveStreams(filename);
@@ -81,6 +96,104 @@ public class Evaluation {
 			this.setUpRealDataSingleStream(filename);
 			break;
 		}
+	}
+
+	public void setUpRealDataStream(String filename, StreamCount streamCount) {
+		this.realDataFilename = filename;
+		switch (streamCount) {
+		case FIVE:
+			this.setUpRealDataFiveStreams(filename);
+			break;
+		case THREE:
+			this.setUpRealDataThreeStreams(filename);
+			break;
+		case SINGLE:
+		default:
+			this.setUpRealDataSingleStream(filename);
+			break;
+		}
+	}
+
+	public ArrayList<IdentifiedState> testRecognition(Block b, double devLower, double devUpper) {
+		TimeSeriesDatabase db = TimeSeriesDatabase.instance;
+		if (db == null)
+			return new ArrayList<IdentifiedState>();
+		ArrayList<IdentifiedState> result = new ArrayList<IdentifiedState>();
+		for (State s : b.getAssignedState()) {
+			result.addAll(db.recognizeState(s.getName(), s.getAssignedProperties(), devLower, devUpper));
+		}
+		return result;
+	}
+
+	public List<IdentifiedState> getRealStates() {
+		return realStates;
+	}
+
+	public void setRealStates(List<IdentifiedState> realStates) {
+		this.realStates = realStates;
+	}
+
+	public List<EvaluationResult> calculatePrecisionRecall(List<IdentifiedState> recognizedStates) {
+		// all states based on their name
+		HashMap<String, List<IdentifiedState>> statesReal = new HashMap<String, List<IdentifiedState>>();
+		for (IdentifiedState s : realStates) {
+			if (statesReal.containsKey(s.getName())) {
+				List<IdentifiedState> existing = statesReal.get(s.getName());
+				existing.add(s);
+				statesReal.put(s.getName(), existing);
+			} else {
+				List<IdentifiedState> existing = new ArrayList<IdentifiedState>();
+				existing.add(s);
+				statesReal.put(s.getName(), existing);
+			}
+		}
+		HashMap<String, List<IdentifiedState>> statesRecognized = new HashMap<String, List<IdentifiedState>>();
+		for (IdentifiedState s : recognizedStates) {
+			if (statesRecognized.containsKey(s.getName())) {
+				List<IdentifiedState> existing = statesRecognized.get(s.getName());
+				existing.add(s);
+				statesRecognized.put(s.getName(), existing);
+			} else {
+				List<IdentifiedState> existing = new ArrayList<IdentifiedState>();
+				existing.add(s);
+				statesRecognized.put(s.getName(), existing);
+			}
+		}
+		List<EvaluationResult> result = new ArrayList<EvaluationResult>();
+		for (Entry<String, List<IdentifiedState>> entry : statesRecognized.entrySet()) {
+			String statename = entry.getKey();
+			List<IdentifiedState> val = entry.getValue();
+			result.add(calculatePrecisionRecall(statename, val, statesReal));
+
+		}
+		return result;
+
+	}
+
+	private EvaluationResult calculatePrecisionRecall(String statename, List<IdentifiedState> recognizedStates,
+			HashMap<String, List<IdentifiedState>> statesReal) {
+		int intersection = 0;
+		boolean noMatch = false;
+		// look
+		for (IdentifiedState s : recognizedStates) {
+			if (statesReal.get(statename).contains(s)) {
+				intersection++;
+			}
+			if (s.getTimestamp().equals("")) {
+				noMatch = true;
+			}
+		}
+		// calculate precision,recall,F-Measure
+		double precision;
+		if (noMatch) {
+			precision = calculatePrecision(intersection, 0);
+		} else {
+			precision = calculatePrecision(intersection, recognizedStates.size());
+		}
+		double recall = calculateRecall(intersection, statesReal.get(statename).size());
+		double fMeasure = calculateFMeasure(precision, recall);
+		EvaluationResult result = new EvaluationResult(statename, precision, recall, fMeasure);
+		return result;
 	}
 
 	private void setUpRealDataSingleStream(String filename) {
@@ -229,88 +342,6 @@ public class Evaluation {
 				}
 			}
 		}
-	}
-
-	public ArrayList<IdentifiedState> testRecognition(Block b, double devLower, double devUpper) {
-		TimeSeriesDatabase db = TimeSeriesDatabase.instance;
-		if (db == null)
-			return new ArrayList<IdentifiedState>();
-		ArrayList<IdentifiedState> result = new ArrayList<IdentifiedState>();
-		for (State s : b.getAssignedState()) {
-			result.addAll(db.recognizeState(s.getName(), s.getAssignedProperties(), devLower, devUpper));
-		}
-		return result;
-	}
-
-	public List<IdentifiedState> getRealStates() {
-		return realStates;
-	}
-
-	public void setRealStates(List<IdentifiedState> realStates) {
-		this.realStates = realStates;
-	}
-
-	public List<EvaluationResult> calculatePrecisionRecall(List<IdentifiedState> recognizedStates) {
-		// all states based on their name
-		HashMap<String, List<IdentifiedState>> statesReal = new HashMap<String, List<IdentifiedState>>();
-		for (IdentifiedState s : realStates) {
-			if (statesReal.containsKey(s.getName())) {
-				List<IdentifiedState> existing = statesReal.get(s.getName());
-				existing.add(s);
-				statesReal.put(s.getName(), existing);
-			} else {
-				List<IdentifiedState> existing = new ArrayList<IdentifiedState>();
-				existing.add(s);
-				statesReal.put(s.getName(), existing);
-			}
-		}
-		HashMap<String, List<IdentifiedState>> statesRecognized = new HashMap<String, List<IdentifiedState>>();
-		for (IdentifiedState s : recognizedStates) {
-			if (statesRecognized.containsKey(s.getName())) {
-				List<IdentifiedState> existing = statesRecognized.get(s.getName());
-				existing.add(s);
-				statesRecognized.put(s.getName(), existing);
-			} else {
-				List<IdentifiedState> existing = new ArrayList<IdentifiedState>();
-				existing.add(s);
-				statesRecognized.put(s.getName(), existing);
-			}
-		}
-		List<EvaluationResult> result = new ArrayList<EvaluationResult>();
-		for (Entry<String, List<IdentifiedState>> entry : statesRecognized.entrySet()) {
-			String statename = entry.getKey();
-			List<IdentifiedState> val = entry.getValue();
-			result.add(calculatePrecisionRecall(statename, val, statesReal));
-
-		}
-		return result;
-
-	}
-
-	private EvaluationResult calculatePrecisionRecall(String statename, List<IdentifiedState> recognizedStates,
-			HashMap<String, List<IdentifiedState>> statesReal) {
-		int intersection = 0;
-		boolean noMatch = false;
-		// look
-		for (IdentifiedState s : recognizedStates) {
-			if (statesReal.get(statename).contains(s)) {
-				intersection++;
-			}
-			if (s.getTimestamp().equals("")) {
-				noMatch = true;
-			}
-		}
-		// calculate precision,recall,F-Measure
-		double precision;
-		if (noMatch) {
-			precision = calculatePrecision(intersection, 0);
-		} else {
-			precision = calculatePrecision(intersection, recognizedStates.size());
-		}
-		double recall = calculateRecall(intersection, statesReal.get(statename).size());
-		double fMeasure = calculateFMeasure(precision, recall);
-		EvaluationResult result = new EvaluationResult(statename, precision, recall, fMeasure);
-		return result;
 	}
 
 	private double calculatePrecision(double intersection, double retrieved) {

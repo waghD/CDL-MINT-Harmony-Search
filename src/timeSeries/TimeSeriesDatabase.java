@@ -162,54 +162,6 @@ public class TimeSeriesDatabase {
 	    }	
 	 }
 	 
-	 public List<IdentifiedState> recognizeStateHarmonized(String statename, List<Property> propertyValues, 
-			 Map<String, Boundaries<Double, Double>> harmonics, HarmonyParameters harmonyParams) {
-			Query query = new Query(StateQuery.createQuery(statename), dbName);
-			//final long startTime = System.nanoTime();
-			QueryResult queryResult = influxDB.query(query);
-			//final long duration = System.nanoTime() - startTime;
-			//System.out.println("Time: " + duration);
-
-			List<IdentifiedState> stateList = new ArrayList<IdentifiedState>();
-
-			for (QueryResult.Result result : queryResult.getResults()) {
-				if (result.getSeries() != null) {
-					for (QueryResult.Series series : result.getSeries()) {
-
-						for (List<Object> val : series.getValues()) {
-							IdentifiedState s = new IdentifiedState();
-							List<Property> properties = new ArrayList<Property>();
-							s.setName(statename);
-							for (int i = 0; i < val.size(); i++) {
-								if (i == 0) {
-									Instant instant = Instant.from(ISO8601_FORMATTER.parse(String.valueOf(val.get(i))));
-									LocalDateTime ldt = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
-									s.setTimestamp(ldt.toString());
-								} else {
-									Property p = new Property();
-									p.setName(series.getColumns().get(i));
-									p.setValue((double) val.get(i));
-									properties.add(p);
-								}
-							}
-							s.setProperties(properties);
-							stateList.add(s);
-
-						}
-					}
-				} else {
-					IdentifiedState s = new IdentifiedState();
-					List<Property> properties = propertyValues;
-					s.setName(statename);
-					s.setTimestamp("");
-					s.setProperties(properties);
-					stateList.add(s);
-
-				}
-			}
-			return stateList;
-		}
-	
 	public List<IdentifiedState> recognizeState(String statename, List<Property> propertyValues, double devLower, double devUpper) {
 		Query query = new Query(StateQuery.createQuery(statename, propertyValues, devLower, devUpper), dbName);
 		//final long startTime = System.nanoTime();
