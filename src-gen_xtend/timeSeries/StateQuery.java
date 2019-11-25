@@ -1,10 +1,8 @@
 package timeSeries;
 
 import java.util.List;
-import java.util.Map;
 
 import design.Property;
-import main.PropertyBoundaries;
 
 public class StateQuery {
 	
@@ -15,11 +13,11 @@ public class StateQuery {
 	 * @param variationRange Variation range in percent (between 0 and 1)
 	 * @return Query statement
 	 */
-	public static String createQuery(String measurement, List<Property> stateAssignments,  Map<String,PropertyBoundaries> propertyMap) {
+	public static String createQuery(String measurement, List<Property> stateAssignments, double devLower, double devUpper) {
 		String result ="";
 		result = new StringBuilder()
-				.append(generateFrom(stateAssignments))
-				.append(generateWhere(stateAssignments, propertyMap))
+				.append(generateFrom(stateAssignments,measurement))
+				.append(generateWhere(stateAssignments,devLower, devUpper))
 				.toString();
 		return result;
 	}
@@ -31,7 +29,7 @@ public class StateQuery {
 	 * @param measurement Name of the measurement saved in the TSDB
 	 * @return FROM clause part
 	 */
-	private static String generateFrom(List<Property> stateAssignments) {
+	private static String generateFrom(List<Property> stateAssignments, String measurement) {
 		String result="SELECT ";
 		for (Property state : stateAssignments) {
 			result += state.getName()+", ";
@@ -47,17 +45,16 @@ public class StateQuery {
 	 * @param vR Variation range in percent (between 0 and 1)
 	 * @return WHERE clause part
 	 */
-	private static String generateWhere(List<Property> stateAssignments,  Map<String,PropertyBoundaries> propertyMap) {
+	private static String generateWhere(List<Property> stateAssignments, double vL, double vU) {
 		String result="WHERE ";
 		int counter = stateAssignments.size();
 		int i=1;
 		for (Property state : stateAssignments) {
-			PropertyBoundaries propBoundaries = propertyMap.get(state.getName());
 			if(i<counter) {
-				result += state.getName()+">= "+ String.format("%.10f",lowerBound(state.getValue(),propBoundaries.getLower()))+" and " + state.getName()+"<= "+String.format("%.10f",upperBound(state.getValue(),propBoundaries.getUpper()))+" and ";	
+				result += state.getName()+">= "+ String.format("%.10f",lowerBound(state.getValue(),vL))+" and " + state.getName()+"<= "+String.format("%.10f",upperBound(state.getValue(),vU))+" and ";	
 			}
 			else {
-				result += state.getName()+">= "+String.format("%.10f",lowerBound(state.getValue(),propBoundaries.getLower()))+" and " + state.getName()+"<= "+String.format("%.10f",upperBound(state.getValue(),propBoundaries.getUpper()));
+				result += state.getName()+">= "+String.format("%.10f",lowerBound(state.getValue(),vL))+" and " + state.getName()+"<= "+String.format("%.10f",upperBound(state.getValue(),vU));
 			}
 			i++;
 		}

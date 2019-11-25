@@ -29,7 +29,6 @@ import org.influxdb.dto.QueryResult;
 import design.Property;
 import main.Boundaries;
 import main.HarmonyParameters;
-import main.PropertyBoundaries;
 import runtime.IdentifiedState;
 
 public class TimeSeriesDatabase {
@@ -208,8 +207,8 @@ public class TimeSeriesDatabase {
 			return stateList;
 		}
 	
-	public List<IdentifiedState> recognizeState(String statename, List<Property> propertyValues,  Map<String,PropertyBoundaries> propertyMap) {
-		Query query = new Query(StateQuery.createQuery(statename, propertyValues, propertyMap), dbName);
+	public List<IdentifiedState> recognizeState(String statename, List<Property> propertyValues, double devLower, double devUpper) {
+		Query query = new Query(StateQuery.createQuery(statename, propertyValues, devLower, devUpper), dbName);
 		//final long startTime = System.nanoTime();
 		QueryResult queryResult = influxDB.query(query);
 		//final long duration = System.nanoTime() - startTime;

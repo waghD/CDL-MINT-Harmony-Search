@@ -20,7 +20,6 @@ import design.Block;
 import design.Property;
 import design.State;
 import runtime.IdentifiedState;
-import timeSeries.PropertyBoundaries;
 import timeSeries.TimeSeriesDatabase;
 
 
@@ -182,10 +181,10 @@ public class Evaluation {
 	}
 	
 	
-	public ArrayList<IdentifiedState> testRecognition(TimeSeriesDatabase db, Block b,  Map<String,PropertyBoundaries> propertyMap) {
+	public ArrayList<IdentifiedState> testRecognition(TimeSeriesDatabase db, Block b, double devLower, double devUpper) {
 		ArrayList<IdentifiedState> result = new ArrayList<IdentifiedState>();
 		for (State s : b.getAssignedState()) {
-			result.addAll(db.recognizeState(s.getName(), s.getAssignedProperties(), propertyMap));
+			result.addAll(db.recognizeState(s.getName(), s.getAssignedProperties(), devLower, devUpper));
 		}
 		return result;
 	}
