@@ -16,12 +16,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import design.Block;
 import design.Property;
 import design.State;
 import runtime.IdentifiedState;
+import timeSeries.PropertyBoundaries;
 import timeSeries.TimeSeriesDatabase;
 
 public class Evaluation {
@@ -343,7 +345,100 @@ public class Evaluation {
 			}
 		}
 	}
+	
+	
+	public ArrayList<IdentifiedState> testRecognition(TimeSeriesDatabase db, Block b,  Map<String,PropertyBoundaries> propertyMap) {
+		ArrayList<IdentifiedState> result = new ArrayList<IdentifiedState>();
+		for (State s : b.getAssignedState()) {
+			result.addAll(db.recognizeState(s.getName(), s.getAssignedProperties(), propertyMap));
+		}
+		return result;
+	}
+	
+	public ArrayList<IdentifiedState> testRecognitionWithHarmony(TimeSeriesDatabase db, Block b, Map<String, Boundaries<Double, Double>> harmonics, HarmonyParameters hp) {
+		ArrayList<IdentifiedState> result = new ArrayList<IdentifiedState>();
+		for (State s : b.getAssignedState()) {
+			
+			result.addAll(db.recognizeState(s.getName(), s.getAssignedProperties(), harmonics.get(s.getName()), hp));
+		}
+		return result;
+	}
 
+	public List<IdentifiedState> getRealStates() {
+		return realStates;
+	}
+
+	public void setRealStates(List<IdentifiedState> realStates) {
+		this.realStates = realStates;
+	}
+	
+	
+	public List<EvaluationResult> calculatePrecisionRecall(List<IdentifiedState> recognizedStates) {
+		// all states based on their name
+		HashMap<String, List<IdentifiedState>> statesReal = new HashMap<String, List<IdentifiedState>>();
+		for (IdentifiedState s : realStates) {
+			if(statesReal.containsKey(s.getName())) {
+				List<IdentifiedState> existing = statesReal.get(s.getName());
+				existing.add(s);
+				statesReal.put(s.getName(),existing);
+			}
+			else {
+				List<IdentifiedState> existing = new ArrayList<IdentifiedState>();
+				existing.add(s);
+				statesReal.put(s.getName(),existing);
+			}
+		}
+		HashMap<String, List<IdentifiedState>> statesRecognized = new HashMap<String, List<IdentifiedState>>();
+		for (IdentifiedState s : recognizedStates) {
+			if(statesRecognized.containsKey(s.getName())) {
+				List<IdentifiedState> existing = statesRecognized.get(s.getName());
+				existing.add(s);
+				statesRecognized.put(s.getName(),existing);
+			}
+			else {
+				List<IdentifiedState> existing = new ArrayList<IdentifiedState>();
+				existing.add(s);
+				statesRecognized.put(s.getName(),existing);
+			}
+		}
+		List<EvaluationResult> result = new ArrayList<EvaluationResult>();
+		for (Entry<String, List<IdentifiedState>> entry : statesRecognized.entrySet()) {
+		    String statename= entry.getKey();
+		    List<IdentifiedState> val= entry.getValue();
+		    result.add(calculatePrecisionRecall(statename,val,statesReal));
+		
+		}
+		return result;
+		
+		
+	}
+	
+	private EvaluationResult calculatePrecisionRecall(String statename, List<IdentifiedState> recognizedStates, HashMap<String, List<IdentifiedState>> statesReal) {
+		int intersection=0;
+		boolean noMatch=false;
+		//look
+		for (IdentifiedState s : recognizedStates) {
+			if(statesReal.get(statename).contains(s)) {
+				intersection++;
+			}
+			if(s.getTimestamp().equals("")) {
+				noMatch=true;
+			}
+		}
+		//calculate precision,recall,F-Measure
+		double precision;
+		if(noMatch) {
+			precision = calculatePrecision(intersection, 0);	
+		}
+		else {
+			precision = calculatePrecision(intersection, recognizedStates.size());
+		}		
+		double recall = calculateRecall(intersection, statesReal.get(statename).size());
+		double fMeasure = calculateFMeasure(precision,recall);
+		EvaluationResult result = new EvaluationResult(statename, precision, recall, fMeasure);
+		return result;
+	}
+	
 	private double calculatePrecision(double intersection, double retrieved) {
 		return intersection / retrieved;
 	}
