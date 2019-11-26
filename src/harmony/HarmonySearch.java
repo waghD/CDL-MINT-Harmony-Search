@@ -1,4 +1,4 @@
-package main;
+package harmony;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -8,6 +8,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
+import main.PropertyBoundaries;
 import output.Printer;
 
 public class HarmonySearch {
@@ -15,7 +16,7 @@ public class HarmonySearch {
 	private HarmonyMemory harmonyMemory;
 	private HarmonyParameters harmonyParameters;
 
-	HarmonySearch(HarmonyMemory memory, HarmonyParameters params) {
+	public HarmonySearch(HarmonyMemory memory, HarmonyParameters params) {
 		harmonyMemory = memory;
 		harmonyParameters = params;
 	}
@@ -37,15 +38,17 @@ public class HarmonySearch {
 	 * 
 	 * 
 	 * @param nrOfIter          .. number of iterations (each yields a new solution)
+	 * @param stopIfOptimumFound .. if true, algorithm stops iteration loop when optimum is found
 	 * @param printNewSolutions .. print statements of newly generated solutions
 	 * @param printMemorySwaps  .. print statements of memory swaps
 	 * @return int .. number of iterations required to find optimum, 0 if no optimum was found
 	 */
-	public int execHarmonySearch(int nrOfIter, boolean stopIfOptimumFound, boolean printNewSolutions, boolean printMemorySwaps) {
+	public HarmonyResult execHarmonySearch(int nrOfIter, boolean stopIfOptimumFound, boolean printNewSolutions, boolean printMemorySwaps) {
 		Random rand = new Random();
-		int foundOptimumAtIter = 0;
+		HarmonyResult hs = new HarmonyResult();
+
 		if (printNewSolutions || printMemorySwaps) Printer.printHeader("ALGORITHM START");
-		
+		long startIterTime = System.currentTimeMillis();
 		for (int i = 0; i < nrOfIter; i++) {
 			// Init new solution map
 			Map<String, PropertyBoundaries> newSolution = new HashMap<String, PropertyBoundaries>();
@@ -118,14 +121,17 @@ public class HarmonySearch {
 			}
 			
 			boolean foundOptimum = harmonyMemory.evalSolution(newSolution, printMemorySwaps);
-			if(foundOptimum) {
-				foundOptimumAtIter = i+1;
+			//only remember iteration where FIRST optimum was found
+			if(foundOptimum && hs.getNrOfIterationsForOptimum() == 0) {
+				hs.setRuntimeTilOptimumFound((System.currentTimeMillis() - startIterTime)/1000.0);
+				hs.setNrOfIterationsForOptimum(i+1);
 				if(stopIfOptimumFound) {
 					break;
 				}
 			}
 		}
-		return foundOptimumAtIter;
+		hs.setRuntimeIterations((System.currentTimeMillis() - startIterTime)/1000.0);
+		return hs;
 	}
 
 }

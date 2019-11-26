@@ -27,8 +27,8 @@ import org.influxdb.dto.Query;
 import org.influxdb.dto.QueryResult;
 
 import design.Property;
+import harmony.HarmonyParameters;
 import main.Boundaries;
-import main.HarmonyParameters;
 import main.PropertyBoundaries;
 import runtime.IdentifiedState;
 

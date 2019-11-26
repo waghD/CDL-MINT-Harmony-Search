@@ -1,7 +1,9 @@
-package main;
+package harmony;
 
 import java.util.List;
 import java.util.Map;
+
+import main.StreamCount;
 
 public class HarmonyParameters {
 

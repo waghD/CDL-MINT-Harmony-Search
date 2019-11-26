@@ -1,4 +1,4 @@
-package main;
+package harmony;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -6,6 +6,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import main.Evaluation;
+import main.EvaluationResult;
+import main.PropertyBoundaries;
+import main.StreamCount;
+import main.TestData;
 import output.Columns;
 import output.Printer;
 
@@ -21,7 +26,7 @@ public class HarmonyMemory {
 		this.streamCount = streamCount;
 	}
 
-	HarmonyMemory(HarmonyParameters params) {
+	public HarmonyMemory(HarmonyParameters params) {
 		streamCount = params.getStreamCount();
 		solutions = this.generateDefaultMemory(streamCount, params.getMemorySize());
 		Evaluation eval = Evaluation.instance;
@@ -88,7 +93,7 @@ public class HarmonyMemory {
 			foundOptimum = true;
 			for (int i = 0; i < newResult.size(); i++) {
 				EvaluationResult stateResult = newResult.get(i);
-				if (stateResult.precision < 1.0 || stateResult.recall < 1.0) {
+				if (stateResult.getPrecision() < 1.0 || stateResult.getRecall() < 1.0) {
 					foundOptimum = false;
 					break;
 				}
@@ -129,7 +134,7 @@ public class HarmonyMemory {
 	 * 
 	 * @param evalList1 .. first solution map
 	 * @param evalList2 .. second solution map
-	 * @return 1 if evalList1 carries better results, -1 if evalList2 carries beter
+	 * @return 1 if evalList1 carries better results, -1 if evalList2 carries better
 	 *         results, 0 if results (precision and recall) are equal in both lists
 	 */
 	private int cmpListEvalResults(List<EvaluationResult> evalList1, List<EvaluationResult> evalList2) {

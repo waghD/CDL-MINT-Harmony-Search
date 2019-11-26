@@ -3,6 +3,12 @@ package main;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import harmony.HarmonyMemory;
+import harmony.HarmonyParameters;
+import harmony.HarmonyResult;
+import harmony.HarmonySearch;
+
 import java.util.HashMap;
 import output.Printer;
 import timeSeries.TimeSeriesDatabase;
@@ -14,8 +20,8 @@ public class Main {
 	 * iteration and potential swaps in memory if better solution was found than
 	 * worst in memory
 	 */
-	private static final boolean PRINT_NEW_SOLUTIONS = true;
-	private static final boolean PRINT_MEMORY_SWAPS = true;
+	private static final boolean PRINT_NEW_SOLUTIONS = false;
+	private static final boolean PRINT_MEMORY_SWAPS = false;
 
 	public static void main(String[] args) {
 
@@ -27,8 +33,9 @@ public class Main {
 
 		// SetUp all information about the states in the files
 		eval.setUpRealDataStream("./lib/realStates_156.csv", streamCount);
+		
 		HarmonyParameters hpa = new HarmonyParameters(0.3, 0.03, 0.9, 3, streamCount);
-		runHarmonySearch(hpa);
+		HarmonyResult hr = runHarmonySearch(hpa, 100, false);
 
 		/**
 		 * Testing harmony search with different sizes of the memory and print number of
@@ -47,25 +54,25 @@ public class Main {
 
 	}
 
-	static int runHarmonySearch(HarmonyParameters hpa) {
+	static HarmonyResult runHarmonySearch(HarmonyParameters hpa, int nrOfIterations, boolean stopIfOptimumFound) {
 		// Initialize HarmonyMemory with HarmonyParameters
 		HarmonyMemory memory = new HarmonyMemory(hpa);
 
 		Printer.printHeader("Harmony parameters:");
 		System.out.println(hpa);
 		Printer.printHeader("INITIAL MEMORY");
-
 		memory.print();
-
 		HarmonySearch search = new HarmonySearch(memory, hpa);
 
 		// Execute harmony search: If parameter "stopIfOptimumFound" is true,
 		// max number of iterations is still respected (here: max 300 iterations)
-		int optimumFoundAtIter = search.execHarmonySearch(300, true, PRINT_NEW_SOLUTIONS, PRINT_MEMORY_SWAPS);
+		HarmonyResult hs = search.execHarmonySearch(nrOfIterations, stopIfOptimumFound, PRINT_NEW_SOLUTIONS, PRINT_MEMORY_SWAPS);
 		Printer.printHeader("MEMORY RESULTS");
 		memory.print();
-		System.out.println("Optimum found at " + optimumFoundAtIter + ". iteration.");
-		return optimumFoundAtIter;
+		Printer.printHeader("HARMONY RESULTS");
+		System.out.println(hs);
+
+		return hs;
 	}
 
 	private static void setUpDatabase(String filenameData, boolean longRun, int timespan) {
