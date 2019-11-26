@@ -8,6 +8,7 @@ public class HarmonyParameters {
 	private double r_pa; //pitch adjustment rate
 	private double band; //bandwidth
 	private double r_accept; //acceptance rate
+	private int memorySize;
 
 	/**
 	 * Initializes harmony parameters
@@ -17,10 +18,11 @@ public class HarmonyParameters {
 	 * @param band .. bandwidth
 	 * @param r_accept .. acceptance rate
 	 */
-	public HarmonyParameters(double r_pa, double band,double r_accept) {
+	public HarmonyParameters(double r_pa, double band,double r_accept, int memorySize) {
 		this.r_pa = r_pa;
 		this.band = band;
 		this.r_accept = r_accept;
+		this.memorySize = memorySize;
 	}
 
 	public double getR_pa() {
@@ -47,11 +49,14 @@ public class HarmonyParameters {
 		this.r_accept = r_accept;
 	}
 	
+	public int getMemorySize() {
+		return memorySize;
+	}
 
 	public String toString() {
 		return String.format("Acceptance rate (r_accept): %.2f\nParameter Adjustment Rate (r_pa): %.2f\n" +
 				"bandwith (band) = %.2f\n" +
-				"Memory size (solutions) = %d", this.r_accept, this.r_pa, this.band, memory.size());
+				"Memory size (solutions) = %d", this.r_accept, this.r_pa, this.band, memorySize);
 	}
 
 

@@ -23,14 +23,12 @@ public class Main {
 
 		StreamCount streamCount = StreamCount.FIVE;
 
-		int memorySize = 3;
-
 		Evaluation eval = new Evaluation();
 
 		// SetUp all information about the states in the files
 		eval.setUpRealDataStream("./lib/realStates_156.csv", streamCount);
-		
-		runHarmonySearch(memorySize, streamCount);
+		HarmonyParameters hpa = new HarmonyParameters(0.3, 0.03, 0.9, 3);
+		runHarmonySearch(hpa, streamCount);
 
 		/**
 		 * Testing harmony search with different sizes of the memory and print number of
@@ -40,6 +38,7 @@ public class Main {
 //		List<Integer> optimumFoundList = new ArrayList<Integer>();
 //
 //		for (int i : iterTestValues) {
+//			hpa = new HarmonyParameters(0.3, 0.03, 0.9, i);
 //			int optimumFoundAtIter = runHarmonySearch(i, streamCount);
 //			optimumFoundList.add(optimumFoundAtIter);
 //		}
@@ -48,7 +47,7 @@ public class Main {
 
 	}
 
-	static int runHarmonySearch(int memorySize,  StreamCount streamCount) {
+	static int runHarmonySearch(HarmonyParameters hpa,  StreamCount streamCount) {
 		// Initialize solution map with expected abs. sensor deviations
 		Map<String, PropertyBoundaries> defaultSolutions = new HashMap<String, PropertyBoundaries>();
 		defaultSolutions.put("bp", new PropertyBoundaries(0.1, 0.1));
@@ -64,17 +63,16 @@ public class Main {
 		List<Map<String, PropertyBoundaries>> initialMemory = new ArrayList<Map<String, PropertyBoundaries>>();
 
 		// Initialize harmony memory with 3 (equal) solution maps
-		for (int memorySolutions = 0; memorySolutions < memorySize; memorySolutions++) {
+		for (int memorySolutions = 0; memorySolutions < hpa.getMemorySize(); memorySolutions++) {
 			initialMemory.add(defaultSolutions);
 		}
 		// Initialize harmony parameters
-		HarmonyParameters hpa = new HarmonyParameters(0.3, 0.03, 0.9);
 
 		// Evaluate initialMemory
 		
 		Evaluation eval = Evaluation.instance;
 
-		List<EvaluationResult>[] initialResults = new List[memorySize];
+		List<EvaluationResult>[] initialResults = new List[hpa.getMemorySize()];
 		List<EvaluationResult> defaultResult = eval.evaluate(TestData.setUpDataStream(streamCount), defaultSolutions);
 		for (int i = 0; i < initialResults.length; i++) {
 			initialResults[i] = defaultResult;
