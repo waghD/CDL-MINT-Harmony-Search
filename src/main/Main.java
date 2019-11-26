@@ -38,8 +38,8 @@ public class Main {
 //		List<Integer> optimumFoundList = new ArrayList<Integer>();
 //
 //		for (int i : iterTestValues) {
-//			hpa = new HarmonyParameters(0.3, 0.03, 0.9, i);
-//			int optimumFoundAtIter = runHarmonySearch(i, streamCount);
+//			hpa = new HarmonyParameters(0.3, 0.03, 0.9, i, streamCount);
+//			int optimumFoundAtIter = runHarmonySearch(hpa);
 //			optimumFoundList.add(optimumFoundAtIter);
 //		}
 //		System.out.println(optimumFoundList);
