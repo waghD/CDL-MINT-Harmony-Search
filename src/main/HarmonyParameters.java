@@ -8,7 +8,6 @@ public class HarmonyParameters {
 	private double r_pa; //pitch adjustment rate
 	private double band; //bandwidth
 	private double r_accept; //acceptance rate
-	private List<Map<String,PropertyBoundaries>> memory;
 
 	/**
 	 * Initializes harmony parameters
@@ -18,9 +17,8 @@ public class HarmonyParameters {
 	 * @param band .. bandwidth
 	 * @param r_accept .. acceptance rate
 	 */
-	public HarmonyParameters(List<Map<String,PropertyBoundaries>> solutions, double r_pa, double band,double r_accept) {
+	public HarmonyParameters(double r_pa, double band,double r_accept) {
 		this.r_pa = r_pa;
-		this.memory = solutions;
 		this.band = band;
 		this.r_accept = r_accept;
 	}
@@ -31,14 +29,6 @@ public class HarmonyParameters {
 
 	public void setR_pa(double r_pa) {
 		this.r_pa = r_pa;
-	}
-
-	public List<Map<String,PropertyBoundaries>> getSolutions() {
-		return memory;
-	}
-
-	public void setSolutions(List<Map<String,PropertyBoundaries>> solutions) {
-		this.memory = solutions;
 	}
 
 	public double getBand() {

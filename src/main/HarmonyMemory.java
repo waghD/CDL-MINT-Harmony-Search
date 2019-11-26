@@ -1,49 +1,97 @@
 package main;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+
+import output.Columns;
+import output.Printer;
 
 public class HarmonyMemory {
 
-	private double[][] memory;
+	private List<Map<String, PropertyBoundaries>> solutions;
 	private List<EvaluationResult>[] fitness;
 	private StreamCount streamCount;
 
-	HarmonyMemory(double[][] initialMemory, List<EvaluationResult>[] initialFitness, StreamCount streamCount) {
-		memory = initialMemory;
+	HarmonyMemory(List<Map<String, PropertyBoundaries>> initialMemory, List<EvaluationResult>[] initialFitness, StreamCount streamCount) {
+		solutions = initialMemory;
 		fitness = initialFitness;
 		this.streamCount = streamCount;
 	}
 
-	double[][] getMemory() {
-		return memory;
-	}
-
-	void setMemory(double[][] newMemory) {
-		memory = newMemory;
-	}
-
-	public double[][] evalSolution(double[] solution, double[][] solutions, boolean printActions) {
-		Evaluation eval = Evaluation.instance;
-
-		int worstIndex = findWorstEvalResult();
-		List<EvaluationResult> worstResult = this.fitness[worstIndex];
-
-		List<EvaluationResult> newResult = eval.evaluate(TestData.setUpDataStream(this.streamCount), solution[0],
-				solution[1]);
-
-		if (printActions)
-			System.out.println("New solution: (" + solution[0] + "," + solution[1] + ") => " + newResult);
-		if (cmpListEvalResults(newResult, worstResult) > 0) {
-			solutions[worstIndex][0] = solution[0];
-			solutions[worstIndex][1] = solution[1];
-			fitness[worstIndex] = newResult;
-			if (printActions)
-				System.out.print("\nExchanged " + newResult + " for\n " + worstResult);
-		}
-		this.memory = solutions;
+	List<Map<String, PropertyBoundaries>> getMemory() {
 		return solutions;
 	}
 
+	void setMemory(List<Map<String, PropertyBoundaries>> newMemory) {
+		solutions = newMemory;
+	}
+	
+	/**
+	 * Evaluates whether new solution is better than worst solution in memory. In
+	 * case new solution is better than worst solution, replace worst with new
+	 * solution.
+	 * 
+	 * Evaluation happens according to means (of states) of precision and recall
+	 * 
+	 * @param newSolution        .. the new solution map
+	 * @param solutions          .. solution maps (harmony memory)
+	 * @param realStatesFilePath .. file with real states for evaluation
+	 * @param printNewSolutions  .. print statements of newly generated solutions
+	 * @param printMemorySwaps   .. print statements of memory swaps
+	 * @return boolean .. true when optimal solution (precision and recall both = 1.0) found
+	 */
+	public boolean evalSolution(Map<String, PropertyBoundaries> newSolution, boolean printMemorySwaps) {
+		
+		boolean foundOptimum = false;
+		Evaluation eval = Evaluation.instance;
+
+		int worstResultIdx = findWorstEvalResult();
+		List<EvaluationResult> worstResult = this.fitness[worstResultIdx];
+
+		List<EvaluationResult> newResult = eval.evaluate(TestData.setUpDataStream(this.streamCount), newSolution);
+	
+		if (cmpListEvalResults(newResult, worstResult) > 0) {
+			if (printMemorySwaps) {
+				Printer.printHeader("SWAP: Solution " + (worstResultIdx + 1) + " (worst) -> New solution");
+				Map<String, PropertyBoundaries> worstSolution = solutions.get(worstResultIdx);
+				// Get all properties in map
+				List<String> propertyNameList = new ArrayList<>(newSolution.keySet());
+				for (int i = 0; i < propertyNameList.size(); i++) {
+					String curProperty = propertyNameList.get(i);
+					new Columns().addLine(
+							curProperty + ": " + worstSolution.get(curProperty) + " -> " + newSolution.get(curProperty))
+							.print();
+				}
+				System.out.print("\n" + worstResult + "\n->\n" + newResult);
+			}
+			solutions.set(worstResultIdx, newSolution);
+			fitness[worstResultIdx] = newResult;
+			
+			System.out.println();
+			foundOptimum = true;
+			for(int i = 0; i < newResult.size(); i++) {
+				EvaluationResult stateResult = newResult.get(i);
+				if(stateResult.precision < 1.0 || stateResult.recall < 1.0) {
+					foundOptimum = false;
+					break;
+				}
+			}
+		}
+		return foundOptimum;
+
+	}
+
+	
+	/**
+	 * Determines worst result in list of solution maps.
+	 * 
+	 * Worst solution is determined by worst precision/recall
+	 * 
+	 * @param evalResultListofLists
+	 * @return
+	 */
 	private int findWorstEvalResult() {
 		int worstIndex = 0;
 		int index = 0;
@@ -58,11 +106,18 @@ public class HarmonyMemory {
 		return worstIndex;
 	}
 
+
 	/**
-	 * @param evalList1
-	 * @param evalList2
-	 * @return 1 if evalList1 carries better results, -1 if evalList2 carries better
-	 *         results, 0 if results are equal in both lists
+	 * Compares two EvaluationResult objects and determines result from worse
+	 * solution.
+	 * 
+	 * Worse solution is the one with worse mean (of states) precision/recall
+	 * whereas precision has higher priority.
+	 * 
+	 * @param evalList1 .. first solution map
+	 * @param evalList2 .. second solution map
+	 * @return 1 if evalList1 carries better results, -1 if evalList2 carries beter
+	 *         results, 0 if results (precision and recall) are equal in both lists
 	 */
 	private int cmpListEvalResults(List<EvaluationResult> evalList1, List<EvaluationResult> evalList2) {
 		double avgPrecisionList1 = 0;
@@ -96,16 +151,26 @@ public class HarmonyMemory {
 			return 0;
 		}
 	}
-
+	
+	/**
+	 * Prints the solutions (= total deviances per sensor) with resulting measures
+	 * 
+	 * @param solutions .. list of solution maps
+	 */
 	public void print() {
-		for (int i = 0; i < memory.length; i++) {
-			for (int j = 0; j < memory[i].length; j++) {
-				System.out.printf("\n%.8f ", memory[i][j]);
-			}
-			for (EvaluationResult solEvalResult : fitness[i]) {
+		for (int i = 0; i < solutions.size(); i++) {
+			Map<String, PropertyBoundaries> curMap = solutions.get(i);
+			Iterator<Map.Entry<String, PropertyBoundaries>> it = curMap.entrySet().iterator();
+			System.out.println(Printer.div + "\nSolution " + (i + 1) + " in memory\n" + Printer.div);
+			curMap.forEach((propertyName, boundaries) -> System.out.printf("%s: %.3f, %.3f\n", propertyName,
+					boundaries.getLower(), boundaries.getUpper()));
+
+			List<EvaluationResult> solutionEvalResults = fitness[i];
+			for (EvaluationResult solEvalResult : solutionEvalResults) {
 				System.out.printf("\n=> %s: Precision: %.2f  Recall: %.2f", solEvalResult.getState(),
 						solEvalResult.getPrecision(), solEvalResult.getRecall());
 			}
+			System.out.println();
 		}
 	}
 }

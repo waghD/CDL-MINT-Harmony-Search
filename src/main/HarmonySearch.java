@@ -1,7 +1,14 @@
 package main;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
+
+import output.Printer;
 
 public class HarmonySearch {
 
@@ -12,31 +19,113 @@ public class HarmonySearch {
 		harmonyMemory = memory;
 		harmonyParameters = params;
 	}
-
-	public void search(int maxIter) {
+	
+	/**
+	 * Executes harmony search on given harmony parameters.
+	 * 
+	 * Base idea of this algorithm is that from given initial solutions ("harmonies"
+	 * in the harmony memory) it tries to find better solutions by using random
+	 * values (according to set bandwith, acceptance rate and adjustment rate) and
+	 * on finding a solution that is better than the worst in our memory, replaces
+	 * the worst in our memory with the new solution.
+	 * 
+	 * By chance, new solutions are generated: (1) by using an existing partial
+	 * solution randomly from the memory (if rand < acceptance rate) (2) adjusting
+	 * the new partial solution randomly within the bandwidth (additionally to (1),
+	 * if rand < param. adjustment rate) (3) completely random within the bandwith
+	 * (rand >= acceptance rate)
+	 * 
+	 * 
+	 * @param nrOfIter          .. number of iterations (each yields a new solution)
+	 * @param printNewSolutions .. print statements of newly generated solutions
+	 * @param printMemorySwaps  .. print statements of memory swaps
+	 * @return int .. number of iterations required to find optimum, 0 if no optimum was found
+	 */
+	public int execHarmonySearch(int nrOfIter, boolean stopIfOptimumFound, boolean printNewSolutions, boolean printMemorySwaps) {
 		Random rand = new Random();
-		System.out.println("Initial harmony");
-		harmonyMemory.print();
+		int foundOptimumAtIter = 0;
+		if (printNewSolutions || printMemorySwaps) Printer.printHeader("ALGORITHM START");
+		
+		for (int i = 0; i < nrOfIter; i++) {
+			// Init new solution map
+			Map<String, PropertyBoundaries> newSolution = new HashMap<String, PropertyBoundaries>();
+			// Get the property names (keys) of a solution map of a solution of the harmony
+			// memory (and convert to list)
+			Set<String> propertyNamesSet = harmonyMemory.getMemory().get(0).keySet();
+			List<String> propertyNamesList = new ArrayList<>(propertyNamesSet);
 
-		double[] newSolution = new double[2];
-		for (int i = 0; i < maxIter; i++) {
-			for (int j = 0; j < harmonyMemory.getMemory()[0].length; j++) {
+			for (String prop : propertyNamesList) {
+				newSolution.put(prop, new PropertyBoundaries(0, 0));
+			}
+			// int nrOfProperties = hpa.getSolutions().get(0).size()
+			for (int z = 0; z < propertyNamesList.size(); z++) {
+				String curPropertyName = propertyNamesList.get(z);
 				if (rand.nextDouble() < harmonyParameters.getR_accept()) {
-					newSolution[j] = harmonyMemory.getMemory()[rand.nextInt(harmonyMemory.getMemory().length)][j];
+					int nrOfSolutionsInMemory = harmonyMemory.getMemory().size();
+					
+					newSolution
+					.get(curPropertyName)
+					.setLower(
+							harmonyMemory
+							.getMemory()
+							.get(rand.nextInt(nrOfSolutionsInMemory))
+							.get(curPropertyName)
+							.getLower()
+							);
+					
+					newSolution
+					.get(curPropertyName)
+					.setUpper(
+							harmonyMemory
+							.getMemory()
+							.get(rand.nextInt(nrOfSolutionsInMemory))
+							.get(curPropertyName)
+							.getUpper()
+							);
+
 					if (rand.nextDouble() < harmonyParameters.getR_pa()) {
-						newSolution[j] = newSolution[j]
-								+ ThreadLocalRandom.current().nextDouble(0, 1) * harmonyParameters.getBand();
+						newSolution
+						.get(curPropertyName)
+						.setLower(
+								newSolution
+								.get(curPropertyName)
+								.getLower() + ThreadLocalRandom.current().nextDouble(0, 1) * harmonyParameters.getBand()
+								);
+						
+						newSolution
+						.get(curPropertyName)
+						.setUpper(
+								newSolution
+								.get(curPropertyName)
+								.getUpper() + ThreadLocalRandom.current().nextDouble(0, 1) * harmonyParameters.getBand()
+								);
 					}
 				} else {
-					newSolution[j] = ThreadLocalRandom.current().nextDouble(0, harmonyParameters.getBand());
+					newSolution
+					.get(curPropertyName)
+					.setLower(ThreadLocalRandom.current().nextDouble(0, harmonyParameters.getBand()));
+					
+					newSolution
+					.get(curPropertyName)
+					.setUpper(ThreadLocalRandom.current().nextDouble(0, harmonyParameters.getBand()));
+				}
+
+			}
+			if(printNewSolutions) {
+				Printer.printHeader("New solution (" + (i+1) + ". iteration)");
+				newSolution.forEach((propertyName, boundaries) -> System.out.println(propertyName + ": " + boundaries));
+				
+			}
+			
+			boolean foundOptimum = harmonyMemory.evalSolution(newSolution, printMemorySwaps);
+			if(foundOptimum) {
+				foundOptimumAtIter = i+1;
+				if(stopIfOptimumFound) {
+					break;
 				}
 			}
-
-			harmonyMemory.evalSolution(newSolution, harmonyMemory.getMemory(), false);
 		}
-		System.out.println("\n\nAfter:");
-
-		harmonyMemory.print();
+		return foundOptimumAtIter;
 	}
 
 }
