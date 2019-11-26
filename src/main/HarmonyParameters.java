@@ -9,6 +9,7 @@ public class HarmonyParameters {
 	private double band; //bandwidth
 	private double r_accept; //acceptance rate
 	private int memorySize;
+	private StreamCount streamCount;
 
 	/**
 	 * Initializes harmony parameters
@@ -18,11 +19,12 @@ public class HarmonyParameters {
 	 * @param band .. bandwidth
 	 * @param r_accept .. acceptance rate
 	 */
-	public HarmonyParameters(double r_pa, double band,double r_accept, int memorySize) {
+	public HarmonyParameters(double r_pa, double band,double r_accept, int memorySize, StreamCount streamCount) {
 		this.r_pa = r_pa;
 		this.band = band;
 		this.r_accept = r_accept;
 		this.memorySize = memorySize;
+		this.streamCount = streamCount;
 	}
 
 	public double getR_pa() {
@@ -51,6 +53,14 @@ public class HarmonyParameters {
 	
 	public int getMemorySize() {
 		return memorySize;
+	}
+	
+	public StreamCount getStreamCount() {
+		return streamCount;
+	}
+	
+	public void setStreamCount(StreamCount streamCount) {
+		this.streamCount = streamCount;
 	}
 
 	public String toString() {

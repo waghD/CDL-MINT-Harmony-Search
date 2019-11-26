@@ -27,8 +27,8 @@ public class Main {
 
 		// SetUp all information about the states in the files
 		eval.setUpRealDataStream("./lib/realStates_156.csv", streamCount);
-		HarmonyParameters hpa = new HarmonyParameters(0.3, 0.03, 0.9, 3);
-		runHarmonySearch(hpa, streamCount);
+		HarmonyParameters hpa = new HarmonyParameters(0.3, 0.03, 0.9, 3, streamCount);
+		runHarmonySearch(hpa);
 
 		/**
 		 * Testing harmony search with different sizes of the memory and print number of
@@ -47,38 +47,9 @@ public class Main {
 
 	}
 
-	static int runHarmonySearch(HarmonyParameters hpa,  StreamCount streamCount) {
-		// Initialize solution map with expected abs. sensor deviations
-		Map<String, PropertyBoundaries> defaultSolutions = new HashMap<String, PropertyBoundaries>();
-		defaultSolutions.put("bp", new PropertyBoundaries(0.1, 0.1));
-		defaultSolutions.put("map", new PropertyBoundaries(0.1, 0.1));
-		defaultSolutions.put("gp", new PropertyBoundaries(0.1, 0.1));
-		defaultSolutions.put("sap", new PropertyBoundaries(0.1, 0.1));
-		defaultSolutions.put("wp", new PropertyBoundaries(0.1, 0.1));
-
-		/**
-		 * Basic harmony search test: 3 solutions in memory, harmony parameters:
-		 * acceptance rate 0.9, adjustment rate 0.3, bandwidth 0.03
-		 */
-		List<Map<String, PropertyBoundaries>> initialMemory = new ArrayList<Map<String, PropertyBoundaries>>();
-
-		// Initialize harmony memory with 3 (equal) solution maps
-		for (int memorySolutions = 0; memorySolutions < hpa.getMemorySize(); memorySolutions++) {
-			initialMemory.add(defaultSolutions);
-		}
-		// Initialize harmony parameters
-
-		// Evaluate initialMemory
-		
-		Evaluation eval = Evaluation.instance;
-
-		List<EvaluationResult>[] initialResults = new List[hpa.getMemorySize()];
-		List<EvaluationResult> defaultResult = eval.evaluate(TestData.setUpDataStream(streamCount), defaultSolutions);
-		for (int i = 0; i < initialResults.length; i++) {
-			initialResults[i] = defaultResult;
-		}
-
-		HarmonyMemory memory = new HarmonyMemory(initialMemory, initialResults, streamCount);
+	static int runHarmonySearch(HarmonyParameters hpa) {
+		// Initialize HarmonyMemory with HarmonyParameters
+		HarmonyMemory memory = new HarmonyMemory(hpa);
 
 		Printer.printHeader("Harmony parameters:");
 		System.out.println(hpa);

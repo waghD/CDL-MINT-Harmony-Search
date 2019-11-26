@@ -1,6 +1,7 @@
 package main;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +21,19 @@ public class HarmonyMemory {
 		this.streamCount = streamCount;
 	}
 
+	HarmonyMemory(HarmonyParameters params) {
+		streamCount = params.getStreamCount();
+		solutions = this.generateDefaultMemory(streamCount, params.getMemorySize());
+		Evaluation eval = Evaluation.instance;
+
+		fitness = new List[params.getMemorySize()];
+		int count = 0;
+		for (Map<String, PropertyBoundaries> solution : solutions) {
+			fitness[count] = eval.evaluate(TestData.setUpDataStream(streamCount), solution);
+			count++;
+		}
+	}
+
 	List<Map<String, PropertyBoundaries>> getMemory() {
 		return solutions;
 	}
@@ -27,7 +41,7 @@ public class HarmonyMemory {
 	void setMemory(List<Map<String, PropertyBoundaries>> newMemory) {
 		solutions = newMemory;
 	}
-	
+
 	/**
 	 * Evaluates whether new solution is better than worst solution in memory. In
 	 * case new solution is better than worst solution, replace worst with new
@@ -40,10 +54,11 @@ public class HarmonyMemory {
 	 * @param realStatesFilePath .. file with real states for evaluation
 	 * @param printNewSolutions  .. print statements of newly generated solutions
 	 * @param printMemorySwaps   .. print statements of memory swaps
-	 * @return boolean .. true when optimal solution (precision and recall both = 1.0) found
+	 * @return boolean .. true when optimal solution (precision and recall both =
+	 *         1.0) found
 	 */
 	public boolean evalSolution(Map<String, PropertyBoundaries> newSolution, boolean printMemorySwaps) {
-		
+
 		boolean foundOptimum = false;
 		Evaluation eval = Evaluation.instance;
 
@@ -51,7 +66,7 @@ public class HarmonyMemory {
 		List<EvaluationResult> worstResult = this.fitness[worstResultIdx];
 
 		List<EvaluationResult> newResult = eval.evaluate(TestData.setUpDataStream(this.streamCount), newSolution);
-	
+
 		if (cmpListEvalResults(newResult, worstResult) > 0) {
 			if (printMemorySwaps) {
 				Printer.printHeader("SWAP: Solution " + (worstResultIdx + 1) + " (worst) -> New solution");
@@ -68,12 +83,12 @@ public class HarmonyMemory {
 			}
 			solutions.set(worstResultIdx, newSolution);
 			fitness[worstResultIdx] = newResult;
-			
+
 			System.out.println();
 			foundOptimum = true;
-			for(int i = 0; i < newResult.size(); i++) {
+			for (int i = 0; i < newResult.size(); i++) {
 				EvaluationResult stateResult = newResult.get(i);
-				if(stateResult.precision < 1.0 || stateResult.recall < 1.0) {
+				if (stateResult.precision < 1.0 || stateResult.recall < 1.0) {
 					foundOptimum = false;
 					break;
 				}
@@ -83,7 +98,6 @@ public class HarmonyMemory {
 
 	}
 
-	
 	/**
 	 * Determines worst result in list of solution maps.
 	 * 
@@ -105,7 +119,6 @@ public class HarmonyMemory {
 		}
 		return worstIndex;
 	}
-
 
 	/**
 	 * Compares two EvaluationResult objects and determines result from worse
@@ -151,7 +164,7 @@ public class HarmonyMemory {
 			return 0;
 		}
 	}
-	
+
 	/**
 	 * Prints the solutions (= total deviances per sensor) with resulting measures
 	 * 
@@ -172,5 +185,29 @@ public class HarmonyMemory {
 			}
 			System.out.println();
 		}
+	}
+
+	private List<Map<String, PropertyBoundaries>> generateDefaultMemory(StreamCount streamCount, int memorySize) {
+		
+		// Initialize solution map with expected abs. sensor deviations
+		Map<String, PropertyBoundaries> defaultSolutions = new HashMap<String, PropertyBoundaries>();
+		switch (streamCount) {
+		case FIVE:
+			defaultSolutions.put("sap", new PropertyBoundaries(0.1, 0.1));
+			defaultSolutions.put("wp", new PropertyBoundaries(0.1, 0.1));
+		case THREE:
+			defaultSolutions.put("map", new PropertyBoundaries(0.1, 0.1));
+			defaultSolutions.put("bp", new PropertyBoundaries(0.1, 0.1));
+		case SINGLE:
+		default:
+			defaultSolutions.put("gp", new PropertyBoundaries(0.1, 0.1));
+		}
+		List<Map<String, PropertyBoundaries>> initialMemory = new ArrayList<Map<String, PropertyBoundaries>>();
+
+		// Initialize harmony memory with equal solution maps
+		for (int memorySolutions = 0; memorySolutions < memorySize; memorySolutions++) {
+			initialMemory.add(defaultSolutions);
+		}
+		return initialMemory;
 	}
 }
