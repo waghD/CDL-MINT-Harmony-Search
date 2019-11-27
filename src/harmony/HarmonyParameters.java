@@ -16,10 +16,11 @@ public class HarmonyParameters {
 	/**
 	 * Initializes harmony parameters
 	 *
-	 * @param solutions .. list of solution maps
 	 * @param r_pa .. pitch adjustment rate
 	 * @param band .. bandwidth
 	 * @param r_accept .. acceptance rate
+	 * @param memorySize .. size of memory
+	 * @param streamCount .. number of stream (single, three, five)
 	 */
 	public HarmonyParameters(double r_pa, double band,double r_accept, int memorySize, StreamCount streamCount) {
 		this.r_pa = r_pa;

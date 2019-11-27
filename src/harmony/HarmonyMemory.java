@@ -193,19 +193,19 @@ public class HarmonyMemory {
 	}
 
 	private List<Map<String, PropertyBoundaries>> generateDefaultMemory(StreamCount streamCount, int memorySize) {
-		
+		double startDev = 0.5;
 		// Initialize solution map with expected abs. sensor deviations
 		Map<String, PropertyBoundaries> defaultSolutions = new HashMap<String, PropertyBoundaries>();
 		switch (streamCount) {
 		case FIVE:
-			defaultSolutions.put("sap", new PropertyBoundaries(0.1, 0.1));
-			defaultSolutions.put("wp", new PropertyBoundaries(0.1, 0.1));
+			defaultSolutions.put("sap", new PropertyBoundaries(startDev, startDev));
+			defaultSolutions.put("wp", new PropertyBoundaries(startDev, startDev));
 		case THREE:
-			defaultSolutions.put("map", new PropertyBoundaries(0.1, 0.1));
-			defaultSolutions.put("bp", new PropertyBoundaries(0.1, 0.1));
+			defaultSolutions.put("map", new PropertyBoundaries(startDev, startDev));
+			defaultSolutions.put("bp", new PropertyBoundaries(startDev, startDev));
 		case SINGLE:
 		default:
-			defaultSolutions.put("gp", new PropertyBoundaries(0.1, 0.1));
+			defaultSolutions.put("gp", new PropertyBoundaries(startDev, startDev));
 		}
 		List<Map<String, PropertyBoundaries>> initialMemory = new ArrayList<Map<String, PropertyBoundaries>>();
 

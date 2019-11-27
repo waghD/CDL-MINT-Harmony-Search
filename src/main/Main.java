@@ -35,25 +35,18 @@ public class Main {
 		eval.setUpRealDataStream("./lib/realStates_156.csv", streamCount);
 		
 		HarmonyParameters hpa = new HarmonyParameters(0.3, 0.03, 0.9, 3, streamCount);
-		HarmonyResult hr = runHarmonySearch(hpa, 100, false);
-
-		/**
-		 * Testing harmony search with different sizes of the memory and print number of
-		 * iterations required for finding optimum for each harmony size
-		 */
-//		List<Integer> iterTestValues = new ArrayList<Integer>(Arrays.asList(1, 2, 5, 8, 10));
-//		List<Integer> optimumFoundList = new ArrayList<Integer>();
-//
-//		for (int i : iterTestValues) {
-//			hpa = new HarmonyParameters(0.3, 0.03, 0.9, i, streamCount);
-//			int optimumFoundAtIter = runHarmonySearch(hpa);
-//			optimumFoundList.add(optimumFoundAtIter);
-//		}
-//		System.out.println(optimumFoundList);
-//		System.out.println("Average: " + optimumFoundList.stream().mapToDouble(a -> a).average());
+		HarmonyResult hr = runHarmonySearch(hpa, 30, false);
 
 	}
 
+	/**
+	 * Execute harmony search with given parameters.
+	 * 
+	 * @param hpa .. harmony parameters (bandwidth, acceptance rate, adjustment date, initial memory)
+	 * @param nrOfIterations .. maximum number of iterations (new solutions to test)
+	 * @param stopIfOptimumFound .. stop at iteration where optimum is foud, if optimumt is found
+	 * @return HarmonyResult
+	 */
 	static HarmonyResult runHarmonySearch(HarmonyParameters hpa, int nrOfIterations, boolean stopIfOptimumFound) {
 		// Initialize HarmonyMemory with HarmonyParameters
 		HarmonyMemory memory = new HarmonyMemory(hpa);
