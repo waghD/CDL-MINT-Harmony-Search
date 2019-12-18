@@ -45,6 +45,7 @@ public class Evaluation {
 
 	public Evaluation(String realDataFileName) {
 		this.realDataFilename = realDataFileName;
+		Evaluation.instance = this;
 	}
 
 	public List<EvaluationResult> evaluate(Block roboticArm, Map<String, PropertyBoundaries> propertyMap, boolean printRes) {
@@ -84,44 +85,9 @@ public class Evaluation {
 		return allResults;
 	}
 
-	public void setUpRealDataStream(StreamCount streamCount) {
-		if (this.realDataFilename == null)
-			return;
-		String filename = this.realDataFilename;
-		switch (streamCount) {
-		case FIVE:
-			this.setUpRealDataFiveStreams(filename);
-			break;
-		case THREE:
-			this.setUpRealDataThreeStreams(filename);
-			break;
-		case SINGLE:
-		default:
-			this.setUpRealDataSingleStream(filename);
-			break;
-		}
-	}
-
 	public void setUpRealDataStream(String filename, List<AxisStream> axisList) {
-		this.setUpRealDataStreams(filename, axisList);
-	}
-
-	public void setUpRealDataStream(String filename, StreamCount streamCount) {
 		this.realDataFilename = filename;
-		switch (streamCount) {
-		case FIVE:
-			this.setUpRealDataFiveStreams(filename);
-			break;
-		case THREE:
-			this.setUpRealDataThreeStreams(filename);
-			break;
-		case SINGLE:
-		default:
-			this.setUpRealDataSingleStream(filename);
-			break;
-		}
-		System.out.println(realStates);
-
+		this.setUpRealDataStreams(axisList);
 	}
 
 	public ArrayList<IdentifiedState> testRecognition(Block b, Map<String, PropertyBoundaries> propertyMap) {
@@ -206,163 +172,14 @@ public class Evaluation {
 		return result;
 	}
 
-	private void setUpRealDataSingleStream(String filename) {
-		String csvFile = filename;
+
+	public void setUpRealDataStream(List<AxisStream> axisList) {
 		String line = "";
 		String cvsSplitBy = ";";
 		BufferedReader br = null;
 		try {
 
-			br = new BufferedReader(new FileReader(csvFile));
-			while ((line = br.readLine()) != null) {
-
-				String[] information = line.split(cvsSplitBy);
-				String[] split = information[0].split("\\.");
-				String timestamp = split[2] + "-" + split[1] + "-" + split[0] + "T" + information[1] + "Z";
-				double gp = Double.parseDouble(information[6]);
-				String statename = information[7];
-
-				IdentifiedState s = new IdentifiedState();
-				s.setName(statename);
-				Property p1 = new Property("gp", gp);
-
-				List<Property> properties = new ArrayList<Property>();
-				properties.add(p1);
-				s.setProperties(properties);
-				Instant instant = Instant.from(ISO8601_FORMATTER.parse(timestamp));
-				LocalDateTime ldt = LocalDateTime.ofInstant(instant, ZoneId.from(ISO8601_FORMATTER.parse(timestamp)));
-				s.setTimestamp(ldt.toString());
-				realStates.add(s);
-			}
-
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} finally {
-			if (br != null) {
-				try {
-					br.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-	}
-
-	private void setUpRealDataThreeStreams(String filename) {
-		String csvFile = filename;
-		String line = "";
-		String cvsSplitBy = ";";
-		BufferedReader br = null;
-		try {
-
-			br = new BufferedReader(new FileReader(csvFile));
-			while ((line = br.readLine()) != null) {
-
-				String[] information = line.split(cvsSplitBy);
-				String[] split = information[0].split("\\.");
-				String timestamp = split[2] + "-" + split[1] + "-" + split[0] + "T" + information[1] + "Z";
-				double bp = Double.parseDouble(information[2]);
-				double map = Double.parseDouble(information[3]);
-				double gp = Double.parseDouble(information[6]);
-				String statename = information[7];
-
-				IdentifiedState s = new IdentifiedState();
-				s.setName(statename);
-				Property p1 = new Property("bp", bp);
-				Property p2 = new Property("map", map);
-				Property p3 = new Property("gp", gp);
-
-				List<Property> properties = new ArrayList<Property>();
-				properties.add(p1);
-				properties.add(p2);
-				properties.add(p3);
-				s.setProperties(properties);
-				Instant instant = Instant.from(ISO8601_FORMATTER.parse(timestamp));
-				LocalDateTime ldt = LocalDateTime.ofInstant(instant, ZoneId.from(ISO8601_FORMATTER.parse(timestamp)));
-				s.setTimestamp(ldt.toString());
-				realStates.add(s);
-			}
-
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} finally {
-			if (br != null) {
-				try {
-					br.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-	}
-
-	private void setUpRealDataFiveStreams(String filename) {
-		String line = "";
-		String cvsSplitBy = ";";
-		BufferedReader br = null;
-		try {
-
-			br = new BufferedReader(new FileReader(filename));
-			while ((line = br.readLine()) != null) {
-
-				String[] information = line.split(cvsSplitBy);
-				String[] split = information[0].split("\\.");
-				String timestamp = split[2] + "-" + split[1] + "-" + split[0] + "T" + information[1] + "Z";
-				double bp = Double.parseDouble(information[2]);
-				double map = Double.parseDouble(information[3]);
-				double sap = Double.parseDouble(information[4]);
-				double wp = Double.parseDouble(information[5]);
-				double gp = Double.parseDouble(information[6]);
-				String statename = information[7];
-
-				IdentifiedState s = new IdentifiedState();
-				s.setName(statename);
-				Property p1 = new Property("bp", bp);
-				Property p2 = new Property("map", map);
-				Property p3 = new Property("gp", gp);
-				Property p4 = new Property("sap", sap);
-				Property p5 = new Property("wp", wp);
-				List<Property> properties = new ArrayList<Property>();
-				properties.add(p1);
-				properties.add(p2);
-				properties.add(p3);
-				properties.add(p4);
-				properties.add(p5);
-				s.setProperties(properties);
-				Instant instant = Instant.from(ISO8601_FORMATTER.parse(timestamp));
-				LocalDateTime ldt = LocalDateTime.ofInstant(instant, ZoneId.from(ISO8601_FORMATTER.parse(timestamp)));
-				s.setTimestamp(ldt.toString());
-				System.out.println("Added state: " + s);
-
-				realStates.add(s);
-			}
-
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} finally {
-			if (br != null) {
-				try {
-					br.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-	}
-
-	private void setUpRealDataStreams(String filename, List<AxisStream> axisList) {
-		String line = "";
-		String cvsSplitBy = ";";
-		BufferedReader br = null;
-		try {
-
-			br = new BufferedReader(new FileReader(filename));
+			br = new BufferedReader(new FileReader(this.realDataFilename));
 			while ((line = br.readLine()) != null) {
 
 				String[] information = line.split(cvsSplitBy);

@@ -6,6 +6,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import design.Property;
+import main.AxisStream;
 import main.Evaluation;
 import main.EvaluationResult;
 import main.PropertyBoundaries;
@@ -18,23 +20,23 @@ public class HarmonyMemory {
 
 	private List<Map<String, PropertyBoundaries>> solutions;
 	private List<EvaluationResult>[] fitness;
-	private StreamCount streamCount;
+	private List<AxisStream> axisStream;
 
-	HarmonyMemory(List<Map<String, PropertyBoundaries>> initialMemory, List<EvaluationResult>[] initialFitness, StreamCount streamCount) {
+	HarmonyMemory(List<Map<String, PropertyBoundaries>> initialMemory, List<EvaluationResult>[] initialFitness, List<AxisStream> axisStream) {
 		solutions = initialMemory;
 		fitness = initialFitness;
-		this.streamCount = streamCount;
+		this.axisStream = axisStream;
 	}
 
 	public HarmonyMemory(HarmonyParameters params) {
-		streamCount = params.getStreamCount();
-		solutions = this.generateDefaultMemory(streamCount, params.getMemorySize());
+		axisStream = params.getAxisStreams();
+		solutions = this.generateDefaultMemory(axisStream, params.getMemorySize());
 		Evaluation eval = Evaluation.instance;
 
 		fitness = new List[params.getMemorySize()];
 		int count = 0;
 		for (Map<String, PropertyBoundaries> solution : solutions) {
-			fitness[count] = eval.evaluate(TestData.setUpDataStream(streamCount), solution, false);
+			fitness[count] = eval.evaluate(TestData.setUpDataStream(axisStream), solution, false);
 			count++;
 		}
 	}
@@ -70,7 +72,7 @@ public class HarmonyMemory {
 		int worstResultIdx = findWorstEvalResult();
 		List<EvaluationResult> worstResult = this.fitness[worstResultIdx];
 
-		List<EvaluationResult> newResult = eval.evaluate(TestData.setUpDataStream(this.streamCount), newSolution, false);
+		List<EvaluationResult> newResult = eval.evaluate(TestData.setUpDataStream(this.axisStream), newSolution, false);
 
 		if (cmpListEvalResults(newResult, worstResult) > 0) {
 			if (printMemorySwaps) {
@@ -192,20 +194,24 @@ public class HarmonyMemory {
 		}
 	}
 
-	private List<Map<String, PropertyBoundaries>> generateDefaultMemory(StreamCount streamCount, int memorySize) {
+	private List<Map<String, PropertyBoundaries>> generateDefaultMemory(List<AxisStream> axisList, int memorySize) {
 		double startDev = 0.01;
 		// Initialize solution map with expected abs. sensor deviations
 		Map<String, PropertyBoundaries> defaultSolutions = new HashMap<String, PropertyBoundaries>();
-		switch (streamCount) {
-		case FIVE:
-			defaultSolutions.put("sap", new PropertyBoundaries(startDev, startDev));
-			defaultSolutions.put("wp", new PropertyBoundaries(startDev, startDev));
-		case THREE:
-			defaultSolutions.put("map", new PropertyBoundaries(startDev, startDev));
-			defaultSolutions.put("bp", new PropertyBoundaries(startDev, startDev));
-		case SINGLE:
-		default:
-			defaultSolutions.put("gp", new PropertyBoundaries(startDev, startDev));
+		if (axisList.contains(AxisStream.BP)) {
+			defaultSolutions.put(AxisStream.BP.getAxisName(), new PropertyBoundaries(startDev, startDev));
+		}
+		if (axisList.contains(AxisStream.GP)) {
+			defaultSolutions.put(AxisStream.GP.getAxisName(), new PropertyBoundaries(startDev, startDev));
+		}
+		if (axisList.contains(AxisStream.MAP)) {
+			defaultSolutions.put(AxisStream.MAP.getAxisName(), new PropertyBoundaries(startDev, startDev));
+		}
+		if (axisList.contains(AxisStream.SAP)) {
+			defaultSolutions.put(AxisStream.SAP.getAxisName(), new PropertyBoundaries(startDev, startDev));
+		}
+		if (axisList.contains(AxisStream.WP)) {
+			defaultSolutions.put(AxisStream.WP.getAxisName(), new PropertyBoundaries(startDev, startDev));
 		}
 		List<Map<String, PropertyBoundaries>> initialMemory = new ArrayList<Map<String, PropertyBoundaries>>();
 

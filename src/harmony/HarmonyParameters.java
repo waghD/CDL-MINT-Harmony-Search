@@ -3,6 +3,7 @@ package harmony;
 import java.util.List;
 import java.util.Map;
 
+import main.AxisStream;
 import main.StreamCount;
 
 public class HarmonyParameters {
@@ -11,7 +12,7 @@ public class HarmonyParameters {
 	private double band; //bandwidth
 	private double r_accept; //acceptance rate
 	private int memorySize;
-	private StreamCount streamCount;
+	private List<AxisStream> axisStream;
 
 	/**
 	 * Initializes harmony parameters
@@ -22,12 +23,12 @@ public class HarmonyParameters {
 	 * @param memorySize .. size of memory
 	 * @param streamCount .. number of stream (single, three, five)
 	 */
-	public HarmonyParameters(double r_pa, double band,double r_accept, int memorySize, StreamCount streamCount) {
+	public HarmonyParameters(double r_pa, double band,double r_accept, int memorySize, List<AxisStream> axisStream) {
 		this.r_pa = r_pa;
 		this.band = band;
 		this.r_accept = r_accept;
 		this.memorySize = memorySize;
-		this.streamCount = streamCount;
+		this.axisStream = axisStream;
 	}
 
 	public double getR_pa() {
@@ -58,12 +59,12 @@ public class HarmonyParameters {
 		return memorySize;
 	}
 	
-	public StreamCount getStreamCount() {
-		return streamCount;
+	public List<AxisStream> getAxisStreams() {
+		return this.axisStream;
 	}
 	
-	public void setStreamCount(StreamCount streamCount) {
-		this.streamCount = streamCount;
+	public void setAxisStreams(List<AxisStream> axisStream) {
+		this.axisStream = axisStream;
 	}
 
 	public String toString() {

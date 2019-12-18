@@ -28,20 +28,16 @@ public class Main {
 
 		setUpDatabase("./lib/Daten_2_156.csv", false, 0);
 
-		StreamCount streamCount = StreamCount.FIVE;
-
-		Evaluation eval = new Evaluation();
+		Evaluation eval = new Evaluation("./lib/realStates_2_156.csv");
 
 		// SetUp all information about the states in the files
 		
-		//Test 
 		AxisStream[] axisArr = {AxisStream.BP, AxisStream.GP, AxisStream.MAP, AxisStream.SAP, AxisStream.WP};
-		//AxisStream[] axisArr = { AxisStream.GP};
 		List<AxisStream> axisList = new ArrayList<AxisStream>(Arrays.asList(axisArr));
 		
-		eval.setUpRealDataStream("./lib/realStates_2_156.csv", axisList);
+		eval.setUpRealDataStream(axisList);
 		
-		HarmonyParameters hpa = new HarmonyParameters(0.3, 0.2, 0.9, 10, streamCount);
+		HarmonyParameters hpa = new HarmonyParameters(0.3, 0.2, 0.9, 10, axisList);
 		HarmonyResult hr = runHarmonySearch(hpa, 150, false);
 
 	}
