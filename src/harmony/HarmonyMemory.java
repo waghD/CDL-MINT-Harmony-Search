@@ -34,7 +34,7 @@ public class HarmonyMemory {
 		fitness = new List[params.getMemorySize()];
 		int count = 0;
 		for (Map<String, PropertyBoundaries> solution : solutions) {
-			fitness[count] = eval.evaluate(TestData.setUpDataStream(streamCount), solution);
+			fitness[count] = eval.evaluate(TestData.setUpDataStream(streamCount), solution, false);
 			count++;
 		}
 	}
@@ -70,7 +70,7 @@ public class HarmonyMemory {
 		int worstResultIdx = findWorstEvalResult();
 		List<EvaluationResult> worstResult = this.fitness[worstResultIdx];
 
-		List<EvaluationResult> newResult = eval.evaluate(TestData.setUpDataStream(this.streamCount), newSolution);
+		List<EvaluationResult> newResult = eval.evaluate(TestData.setUpDataStream(this.streamCount), newSolution, false);
 
 		if (cmpListEvalResults(newResult, worstResult) > 0) {
 			if (printMemorySwaps) {

@@ -47,34 +47,36 @@ public class Evaluation {
 		this.realDataFilename = realDataFileName;
 	}
 
-	public List<EvaluationResult> evaluate(Block roboticArm, Map<String, PropertyBoundaries> propertyMap) {
+	public List<EvaluationResult> evaluate(Block roboticArm, Map<String, PropertyBoundaries> propertyMap, boolean printRes) {
 		ArrayList<IdentifiedState> recStates = new ArrayList<IdentifiedState>();
 		recStates = this.testRecognition(roboticArm, propertyMap);
 		List<EvaluationResult> allResults = new ArrayList<EvaluationResult>();
-		PrintWriter pw;
-		String dir = "modelTest/";
-		String filename = "result" + counter + ".csv";
-		String path = dir + filename;
-		try {
-			File f = new File(dir, filename);
-			f.createNewFile();
-			pw = new PrintWriter(new File(path));
-			String row = "";
-			Collections.sort(recStates);
-			int countProcess = 0;
-			for (IdentifiedState identifiedState : recStates) {
-				if (identifiedState.getName().equals("DriveDown")) {
-					countProcess++;
+		if(printRes) {
+			PrintWriter pw;
+			String dir = "modelTest/";
+			String filename = "result" + counter + ".csv";
+			String path = dir + filename;
+			try {
+				File f = new File(dir, filename);
+				f.createNewFile();
+				pw = new PrintWriter(new File(path));
+				String row = "";
+				Collections.sort(recStates);
+				int countProcess = 0;
+				for (IdentifiedState identifiedState : recStates) {
+					if (identifiedState.getName().equals("DriveDown")) {
+						countProcess++;
+					}
+					row = countProcess + ";" + identifiedState.getName() + ";" + identifiedState.getTs().toString() + "\n";
+					pw.write(row);
 				}
-				row = countProcess + ";" + identifiedState.getName() + ";" + identifiedState.getTs().toString() + "\n";
-				pw.write(row);
+				pw.close();
+				counter++;
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
-			pw.close();
-			counter++;
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
 		}
 		// Calculate Precision and Recall
 		allResults.addAll(this.calculatePrecisionRecall(recStates));
