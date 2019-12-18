@@ -1,6 +1,7 @@
-package main;
+		package main;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -25,22 +26,29 @@ public class Main {
 
 	public static void main(String[] args) {
 
-		setUpDatabase("./lib/Daten_156.csv", false, 0);
+		setUpDatabase("./lib/Daten_2_156.csv", false, 0);
 
 		StreamCount streamCount = StreamCount.FIVE;
 
 		Evaluation eval = new Evaluation();
 
 		// SetUp all information about the states in the files
-		eval.setUpRealDataStream("./lib/realStates_156.csv", streamCount);
 		
-		HarmonyParameters hpa = new HarmonyParameters(0.3, 0.03, 0.9, 3, streamCount);
-		HarmonyResult hr = runHarmonySearch(hpa, 30, false);
+		//Test 
+		AxisStream[] axisArr = {AxisStream.BP, AxisStream.GP, AxisStream.MAP, AxisStream.SAP, AxisStream.WP};
+		//AxisStream[] axisArr = { AxisStream.GP};
+		List<AxisStream> axisList = new ArrayList<AxisStream>(Arrays.asList(axisArr));
+		
+		eval.setUpRealDataStream("./lib/realStates_2_156.csv", axisList);
+		
+		HarmonyParameters hpa = new HarmonyParameters(0.3, 0.2, 0.9, 10, streamCount);
+		HarmonyResult hr = runHarmonySearch(hpa, 150, false);
 
 	}
 
 	/**
-	 * Execute harmony search with given parameters.
+	 * Execute harmony search with given parameters and prints some information
+	 * (influenced by constants in main).
 	 * 
 	 * @param hpa .. harmony parameters (bandwidth, acceptance rate, adjustment date, initial memory)
 	 * @param nrOfIterations .. maximum number of iterations (new solutions to test)

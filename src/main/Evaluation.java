@@ -100,6 +100,10 @@ public class Evaluation {
 		}
 	}
 
+	public void setUpRealDataStream(String filename, List<AxisStream> axisList) {
+		this.setUpRealDataStreams(filename, axisList);
+	}
+
 	public void setUpRealDataStream(String filename, StreamCount streamCount) {
 		this.realDataFilename = filename;
 		switch (streamCount) {
@@ -114,11 +118,14 @@ public class Evaluation {
 			this.setUpRealDataSingleStream(filename);
 			break;
 		}
+		System.out.println(realStates);
+
 	}
 
-	public ArrayList<IdentifiedState> testRecognition(Block b, Map<String,PropertyBoundaries> propertyMap) {
+	public ArrayList<IdentifiedState> testRecognition(Block b, Map<String, PropertyBoundaries> propertyMap) {
 		TimeSeriesDatabase db = TimeSeriesDatabase.instance;
-		if (db == null) return new ArrayList<IdentifiedState>();
+		if (db == null)
+			return new ArrayList<IdentifiedState>();
 		ArrayList<IdentifiedState> result = new ArrayList<IdentifiedState>();
 		for (State s : b.getAssignedState()) {
 			result.addAll(db.recognizeState(s.getName(), s.getAssignedProperties(), propertyMap));
@@ -327,6 +334,8 @@ public class Evaluation {
 				Instant instant = Instant.from(ISO8601_FORMATTER.parse(timestamp));
 				LocalDateTime ldt = LocalDateTime.ofInstant(instant, ZoneId.from(ISO8601_FORMATTER.parse(timestamp)));
 				s.setTimestamp(ldt.toString());
+				System.out.println("Added state: " + s);
+
 				realStates.add(s);
 			}
 
@@ -345,7 +354,68 @@ public class Evaluation {
 		}
 	}
 
-	
+	private void setUpRealDataStreams(String filename, List<AxisStream> axisList) {
+		String line = "";
+		String cvsSplitBy = ";";
+		BufferedReader br = null;
+		try {
+
+			br = new BufferedReader(new FileReader(filename));
+			while ((line = br.readLine()) != null) {
+
+				String[] information = line.split(cvsSplitBy);
+				String[] split = information[0].split("\\.");
+				String timestamp = split[2] + "-" + split[1] + "-" + split[0] + "T" + information[1] + "Z";
+				
+				List<Property> properties = new ArrayList<Property>();
+				
+				/*for( AxisStream axStream : axisList) {
+					properties.add(new Property(axStream.getAxisName(), Double.parseDouble(information[axStream.getSplitNr()])));
+				}*/
+
+				if (axisList.contains(AxisStream.BP)) {
+					properties.add(new Property(AxisStream.BP.getAxisName(), Double.parseDouble(information[AxisStream.BP.getSplitNr()])));
+				}
+				if (axisList.contains(AxisStream.MAP)) {
+					properties.add(new Property(AxisStream.MAP.getAxisName(), Double.parseDouble(information[AxisStream.MAP.getSplitNr()])));
+				}
+				if (axisList.contains(AxisStream.GP)) {
+					properties.add(new Property(AxisStream.GP.getAxisName(), Double.parseDouble(information[AxisStream.GP.getSplitNr()])));
+				}
+				if (axisList.contains(AxisStream.SAP)) {
+					properties.add(new Property(AxisStream.SAP.getAxisName(), Double.parseDouble(information[AxisStream.SAP.getSplitNr()])));
+				}
+				if (axisList.contains(AxisStream.WP)) {
+					properties.add(new Property(AxisStream.WP.getAxisName(), Double.parseDouble(information[AxisStream.WP.getSplitNr()])));
+				}
+				
+				String statename = information[7];
+
+				IdentifiedState s = new IdentifiedState();
+				s.setName(statename);
+				s.setProperties(properties);
+				Instant instant = Instant.from(ISO8601_FORMATTER.parse(timestamp));
+				LocalDateTime ldt = LocalDateTime.ofInstant(instant, ZoneId.from(ISO8601_FORMATTER.parse(timestamp)));
+				s.setTimestamp(ldt.toString());
+				System.out.println("Added state: " + s);
+				realStates.add(s);
+			}
+
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (br != null) {
+				try {
+					br.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+
 	private double calculatePrecision(double intersection, double retrieved) {
 		return intersection / retrieved;
 	}

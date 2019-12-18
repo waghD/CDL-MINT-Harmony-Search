@@ -193,7 +193,7 @@ public class HarmonyMemory {
 	}
 
 	private List<Map<String, PropertyBoundaries>> generateDefaultMemory(StreamCount streamCount, int memorySize) {
-		double startDev = 0.5;
+		double startDev = 0.01;
 		// Initialize solution map with expected abs. sensor deviations
 		Map<String, PropertyBoundaries> defaultSolutions = new HashMap<String, PropertyBoundaries>();
 		switch (streamCount) {

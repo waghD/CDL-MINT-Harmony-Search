@@ -211,6 +211,14 @@ public class TimeSeriesDatabase {
 			return stateList;
 		}
 	
+	 /**
+	  * Checks g
+	  * 
+	  * @param statename
+	  * @param propertyValues
+	  * @param propertyMap
+	  * @return
+	  */
 	public List<IdentifiedState> recognizeState(String statename, List<Property> propertyValues,  Map<String,PropertyBoundaries> propertyMap) {
 		Query query = new Query(StateQuery.createQuery(statename, propertyValues, propertyMap), dbName);
 		//final long startTime = System.nanoTime();
