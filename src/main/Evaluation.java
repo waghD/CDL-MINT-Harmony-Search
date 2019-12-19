@@ -23,7 +23,6 @@ import design.Block;
 import design.Property;
 import design.State;
 import runtime.IdentifiedState;
-import timeSeries.PropertyBoundaries;
 import timeSeries.TimeSeriesDatabase;
 
 public class Evaluation {
@@ -48,9 +47,9 @@ public class Evaluation {
 		Evaluation.instance = this;
 	}
 
-	public List<EvaluationResult> evaluate(Block roboticArm, Map<String, PropertyBoundaries> propertyMap, boolean printRes) {
+	public List<EvaluationResult> evaluate(Block roboticArm, Map<String, PropertyBoundaries> propertyMap, boolean printRes, List<String> statesToEvaluateList) {
 		ArrayList<IdentifiedState> recStates = new ArrayList<IdentifiedState>();
-		recStates = this.testRecognition(roboticArm, propertyMap);
+		recStates = this.testRecognition(roboticArm, propertyMap, statesToEvaluateList);
 		List<EvaluationResult> allResults = new ArrayList<EvaluationResult>();
 		if(printRes) {
 			PrintWriter pw;
@@ -87,16 +86,18 @@ public class Evaluation {
 
 	public void setUpRealDataStream(String filename, List<AxisStream> axisList) {
 		this.realDataFilename = filename;
-		this.setUpRealDataStreams(axisList);
+		this.setUpRealDataStream(axisList);
 	}
 
-	public ArrayList<IdentifiedState> testRecognition(Block b, Map<String, PropertyBoundaries> propertyMap) {
+	public ArrayList<IdentifiedState> testRecognition(Block b, Map<String, PropertyBoundaries> propertyMap, List<String> statesToEvaluateList) {
 		TimeSeriesDatabase db = TimeSeriesDatabase.instance;
 		if (db == null)
 			return new ArrayList<IdentifiedState>();
 		ArrayList<IdentifiedState> result = new ArrayList<IdentifiedState>();
 		for (State s : b.getAssignedState()) {
-			result.addAll(db.recognizeState(s.getName(), s.getAssignedProperties(), propertyMap));
+			if(statesToEvaluateList.size() == 0 || statesToEvaluateList.contains(s.getName())) {
+				result.addAll(db.recognizeState(s.getName(), s.getAssignedProperties(), propertyMap));
+			}
 		}
 		return result;
 	}

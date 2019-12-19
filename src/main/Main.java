@@ -5,6 +5,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
+
 import harmony.HarmonyMemory;
 import harmony.HarmonyParameters;
 import harmony.HarmonyResult;
@@ -28,18 +30,24 @@ public class Main {
 
 		setUpDatabase("./lib/Daten_2_156.csv", false, 0);
 
+
 		Evaluation eval = new Evaluation("./lib/realStates_2_156.csv");
 
 		// SetUp all information about the states in the files
 		
+		//Test 
 		AxisStream[] axisArr = {AxisStream.BP, AxisStream.GP, AxisStream.MAP, AxisStream.SAP, AxisStream.WP};
+		
+		//states to use for evaluation
+		//use to single out state to check if precision recall > 0.00 can be reached at all
+		//Set empty array to use all states!
+		List<String> statesToEvaluateList = new ArrayList<String>(Arrays.asList("Lift"));
 		List<AxisStream> axisList = new ArrayList<AxisStream>(Arrays.asList(axisArr));
 		
 		eval.setUpRealDataStream(axisList);
 		
 		HarmonyParameters hpa = new HarmonyParameters(0.3, 0.2, 0.9, 10, axisList);
-		HarmonyResult hr = runHarmonySearch(hpa, 150, false);
-
+		HarmonyResult hr = runHarmonySearch(hpa, 100, false, statesToEvaluateList);
 	}
 
 	/**
@@ -51,9 +59,9 @@ public class Main {
 	 * @param stopIfOptimumFound .. stop at iteration where optimum is foud, if optimumt is found
 	 * @return HarmonyResult
 	 */
-	static HarmonyResult runHarmonySearch(HarmonyParameters hpa, int nrOfIterations, boolean stopIfOptimumFound) {
+	static HarmonyResult runHarmonySearch(HarmonyParameters hpa, int nrOfIterations, boolean stopIfOptimumFound, List<String> statesToEvaluateList) {
 		// Initialize HarmonyMemory with HarmonyParameters
-		HarmonyMemory memory = new HarmonyMemory(hpa);
+		HarmonyMemory memory = new HarmonyMemory(hpa, statesToEvaluateList);
 
 		Printer.printHeader("Harmony parameters:");
 		System.out.println(hpa);
@@ -63,7 +71,7 @@ public class Main {
 
 		// Execute harmony search: If parameter "stopIfOptimumFound" is true,
 		// max number of iterations is still respected (here: max 300 iterations)
-		HarmonyResult hs = search.execHarmonySearch(nrOfIterations, stopIfOptimumFound, PRINT_NEW_SOLUTIONS, PRINT_MEMORY_SWAPS);
+		HarmonyResult hs = search.execHarmonySearch(nrOfIterations, stopIfOptimumFound, statesToEvaluateList, PRINT_NEW_SOLUTIONS, PRINT_MEMORY_SWAPS);
 		Printer.printHeader("MEMORY RESULTS");
 		memory.print();
 		Printer.printHeader("HARMONY RESULTS");

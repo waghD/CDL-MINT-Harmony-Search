@@ -28,7 +28,7 @@ public class HarmonyMemory {
 		this.axisStream = axisStream;
 	}
 
-	public HarmonyMemory(HarmonyParameters params) {
+	public HarmonyMemory(HarmonyParameters params, List<String> statesToEvaluateList) {
 		axisStream = params.getAxisStreams();
 		solutions = this.generateDefaultMemory(axisStream, params.getMemorySize());
 		Evaluation eval = Evaluation.instance;
@@ -36,7 +36,7 @@ public class HarmonyMemory {
 		fitness = new List[params.getMemorySize()];
 		int count = 0;
 		for (Map<String, PropertyBoundaries> solution : solutions) {
-			fitness[count] = eval.evaluate(TestData.setUpDataStream(axisStream), solution, false);
+			fitness[count] = eval.evaluate(TestData.setUpDataStream(axisStream), solution, false, statesToEvaluateList);
 			count++;
 		}
 	}
@@ -64,7 +64,7 @@ public class HarmonyMemory {
 	 * @return boolean .. true when optimal solution (precision and recall both =
 	 *         1.0) found
 	 */
-	public boolean evalSolution(Map<String, PropertyBoundaries> newSolution, boolean printMemorySwaps) {
+	public boolean evalSolution(Map<String, PropertyBoundaries> newSolution, boolean printMemorySwaps, List<String> statesToEvaluateList) {
 
 		boolean foundOptimum = false;
 		Evaluation eval = Evaluation.instance;
@@ -72,7 +72,7 @@ public class HarmonyMemory {
 		int worstResultIdx = findWorstEvalResult();
 		List<EvaluationResult> worstResult = this.fitness[worstResultIdx];
 
-		List<EvaluationResult> newResult = eval.evaluate(TestData.setUpDataStream(this.axisStream), newSolution, false);
+		List<EvaluationResult> newResult = eval.evaluate(TestData.setUpDataStream(this.axisStream), newSolution, false, statesToEvaluateList);
 
 		if (cmpListEvalResults(newResult, worstResult) > 0) {
 			if (printMemorySwaps) {
@@ -195,7 +195,7 @@ public class HarmonyMemory {
 	}
 
 	private List<Map<String, PropertyBoundaries>> generateDefaultMemory(List<AxisStream> axisList, int memorySize) {
-		double startDev = 0.01;
+		double startDev = 0.1;
 		// Initialize solution map with expected abs. sensor deviations
 		Map<String, PropertyBoundaries> defaultSolutions = new HashMap<String, PropertyBoundaries>();
 		if (axisList.contains(AxisStream.BP)) {

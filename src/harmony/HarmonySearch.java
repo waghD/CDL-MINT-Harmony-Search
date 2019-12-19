@@ -43,7 +43,7 @@ public class HarmonySearch {
 	 * @param printMemorySwaps  .. print statements of memory swaps
 	 * @return int .. number of iterations required to find optimum, 0 if no optimum was found
 	 */
-	public HarmonyResult execHarmonySearch(int nrOfIter, boolean stopIfOptimumFound, boolean printNewSolutions, boolean printMemorySwaps) {
+	public HarmonyResult execHarmonySearch(int nrOfIter, boolean stopIfOptimumFound,  List<String> statesToEvaluateList, boolean printNewSolutions, boolean printMemorySwaps) {
 		Random rand = new Random();
 		HarmonyResult hs = new HarmonyResult();
 
@@ -120,7 +120,7 @@ public class HarmonySearch {
 				
 			}
 			
-			boolean foundOptimum = harmonyMemory.evalSolution(newSolution, printMemorySwaps);
+			boolean foundOptimum = harmonyMemory.evalSolution(newSolution, printMemorySwaps, statesToEvaluateList);
 			//only remember iteration where FIRST optimum was found
 			if(foundOptimum && hs.getNrOfIterationsForOptimum() == 0) {
 				hs.setRuntimeTilOptimumFound((System.currentTimeMillis() - startIterTime)/1000.0);
