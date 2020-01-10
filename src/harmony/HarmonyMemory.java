@@ -13,7 +13,6 @@ import main.AxisStream;
 import main.Evaluation;
 import main.EvaluationResult;
 import main.PropertyBoundaries;
-import main.StreamCount;
 import main.TestData;
 import output.Columns;
 import output.Printer;

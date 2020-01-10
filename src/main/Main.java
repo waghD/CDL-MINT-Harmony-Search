@@ -64,11 +64,9 @@ public class Main {
 						e.printStackTrace();
 					}*/
 
-					// states to use for evaluation
-					// use to single out state to check if precision recall > 0.00 can be reached at
-					// all
+					// states NOT to use for evaluation
 					// Set empty array to use all states!
-					List<String> statesToEvaluateList = new ArrayList<String>(Arrays.asList());
+					List<String> statesToNotEvaluateList = new ArrayList<String>(Arrays.asList("Wait","ReleaseRed", "Idle", "Lift"));
 					List<HarmonyResult> resultList = new ArrayList<HarmonyResult>();
 
 					HarmonyParameters hpa = new HarmonyParameters(adj, 0.15, acc, size, axisList);
@@ -76,8 +74,9 @@ public class Main {
 					Printer.printHeader("Harmony parameters:");
 					System.out.println(hpa);
 
+					//number of iterations for average calculation
 					for (int i = 0; i < 1; i++) {
-						resultList.add(runHarmonySearch(hpa, 5000, true, statesToEvaluateList, 0, 0.3));
+						resultList.add(runHarmonySearch(hpa, 10, true, statesToNotEvaluateList, 0, 0.3));
 					}
 
 					List<Integer> iterationsList = new ArrayList<Integer>();
