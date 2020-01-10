@@ -40,71 +40,77 @@ public class Main {
 		// SetUp all information about the states in the files
 
 		// Test
-		AxisStream[] axisArr = {AxisStream.GP, AxisStream.MAP, AxisStream.BP, AxisStream.SAP, AxisStream.WP};
+		AxisStream[] axisArr = { AxisStream.GP, AxisStream.MAP, AxisStream.BP, AxisStream.SAP, AxisStream.WP };
 		List<AxisStream> axisList = new ArrayList<AxisStream>(Arrays.asList(axisArr));
 
 		eval.setUpRealDataStream(axisList);
 
 		PrintStream out = null;
-		List<Double> accList = new ArrayList<Double>(Arrays.asList(0.7));	
+		List<Double> accList = new ArrayList<Double>(Arrays.asList(0.7));
 		List<Double> adjList = new ArrayList<Double>(Arrays.asList(0.3));
 		List<Integer> sizeList = new ArrayList<Integer>(Arrays.asList(10));
+		List<Double> bandwidthList = new ArrayList<Double>(Arrays.asList(0.3, 0.2, 0.1, 0.05, 0.01, 0.001));
 		DecimalFormat df = new DecimalFormat("#.###");
-        df.setRoundingMode(RoundingMode.CEILING);
-        
+		df.setRoundingMode(RoundingMode.CEILING);
+
 		for (double acc : accList) {
 			for (double adj : adjList) {
 				for (int size : sizeList) {
-					/*try {
-						out = new PrintStream(new FileOutputStream("output/156/rAccept_" + String.valueOf(acc) + "_band_0.1_rAdj_" + String.valueOf(adj) + "_memSize_" + String.valueOf(size) + ".txt", true),
-								true);
-						System.setOut(out);
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}*/
+					for (double bandwidth : bandwidthList) {
 
-					// states NOT to use for evaluation
-					// Set empty array to use all states!
-					List<String> statesToNotEvaluateList = new ArrayList<String>(Arrays.asList("Wait","ReleaseRed", "Idle", "Lift"));
-					List<HarmonyResult> resultList = new ArrayList<HarmonyResult>();
+						/*
+						 * try { out = new PrintStream(new FileOutputStream("output/156/rAccept_" +
+						 * String.valueOf(acc) + "_band_0.1_rAdj_" + String.valueOf(adj) + "_memSize_" +
+						 * String.valueOf(size) + ".txt", true), true); System.setOut(out); } catch
+						 * (IOException e) { // TODO Auto-generated catch block e.printStackTrace(); }
+						 */
 
-					HarmonyParameters hpa = new HarmonyParameters(adj, 0.15, acc, size, axisList);
+						// states NOT to use for evaluation
+						// Set empty array to use all states!
+						List<String> statesToNotEvaluateList = new ArrayList<String>(Arrays.asList("Wait", "Idle"));
+						List<HarmonyResult> resultList = new ArrayList<HarmonyResult>();
 
-					Printer.printHeader("Harmony parameters:");
-					System.out.println(hpa);
+						HarmonyParameters hpa = new HarmonyParameters(adj, bandwidth, acc, size, axisList);
 
-					//number of iterations for average calculation
-					for (int i = 0; i < 1; i++) {
-						resultList.add(runHarmonySearch(hpa, 10, true, statesToNotEvaluateList, 0, 0.3));
+						Printer.printHeader("Harmony parameters:");
+						System.out.println(hpa);
+
+						// number of iterations for average calculation
+						for (int i = 0; i < 1; i++) {
+							resultList.add(runHarmonySearch(hpa, 200, false, statesToNotEvaluateList, 0, 0.3));
+						}
+
+						List<Integer> iterationsList = new ArrayList<Integer>();
+						List<Double> timeTilOptList = new ArrayList<Double>();
+
+						for (HarmonyResult res : resultList) {
+							// System.out.println("Iterations: " + res.getNrOfIterationsForOptimum() + " ("
+							// + res.getRuntimeTilOptimumFound() + "s)" );
+							System.out.println("Iterations: " + res.getNrOfIterationsForOptimum() + " ("
+									+ res.getRuntimeTilOptimumFound() + "s)");
+							iterationsList.add(res.getNrOfIterationsForOptimum());
+							timeTilOptList.add(res.getRuntimeTilOptimumFound());
+						}
+
+						System.out.println(Printer.div);
+						double avgIterations = iterationsList.stream().mapToInt(x -> x).average().orElse(-1);
+						double avgTimeTilOpt = timeTilOptList.stream().mapToDouble(x -> x).average().orElse(-1);
+						System.out.println("Iterations (avg): " + avgIterations);
+						System.out.println("Time til Optimum found (avg): " + avgTimeTilOpt);
+
+						/*
+						 * out.close(); File theFile = new File("output/156/rAccept_" +
+						 * String.valueOf(acc) + "_band_0.1_rAdj_" + String.valueOf(adj) + "_memSize_" +
+						 * String.valueOf(size) + ".txt"); theFile.renameTo(new
+						 * File("output/156/rAccept_" + String.valueOf(acc) + "_band_0.1_rAdj_" +
+						 * String.valueOf(adj) + "_memSize_" + String.valueOf(size) + "__avgTime_" +
+						 * df.format(avgTimeTilOpt) + "_avgIter_" + avgIterations + ".txt"));
+						 */// HarmonyResult hr = runHarmonySearch(hpa, 100, false, statesToEvaluateList);
 					}
-
-					List<Integer> iterationsList = new ArrayList<Integer>();
-					List<Double> timeTilOptList = new ArrayList<Double>();
-
-					for (HarmonyResult res : resultList) {
-						// System.out.println("Iterations: " + res.getNrOfIterationsForOptimum() + " ("
-						// + res.getRuntimeTilOptimumFound() + "s)" );
-						System.out.println(
-								"Iterations: " + res.getNrOfIterationsForOptimum() + " (" + res.getRuntimeTilOptimumFound() + "s)");
-						iterationsList.add(res.getNrOfIterationsForOptimum());
-						timeTilOptList.add(res.getRuntimeTilOptimumFound());
-					}
-
-					System.out.println(Printer.div);
-					double avgIterations = iterationsList.stream().mapToInt(x -> x).average().orElse(-1);
-					double avgTimeTilOpt = timeTilOptList.stream().mapToDouble(x -> x).average().orElse(-1);
-					System.out.println("Iterations (avg): " + avgIterations);
-					System.out.println("Time til Optimum found (avg): " + avgTimeTilOpt);
-
-					/*out.close();
-					File theFile = new File("output/156/rAccept_" + String.valueOf(acc) + "_band_0.1_rAdj_" + String.valueOf(adj) + "_memSize_" + String.valueOf(size) + ".txt");
-					theFile.renameTo(new File("output/156/rAccept_" + String.valueOf(acc) + "_band_0.1_rAdj_" + String.valueOf(adj) + "_memSize_" + String.valueOf(size) + "__avgTime_" + df.format(avgTimeTilOpt) + "_avgIter_" + avgIterations + ".txt"));
-					*/// HarmonyResult hr = runHarmonySearch(hpa, 100, false, statesToEvaluateList);
 				}
 			}
 		}
-		
+
 	}
 
 	/**
@@ -117,9 +123,9 @@ public class Main {
 	 *                           test)
 	 * @param stopIfOptimumFound .. stop at iteration where optimum is foud, if
 	 *                           optimumt is found
-	 * @param minSpace .. minimum value of search space
+	 * @param minSpace           .. minimum value of search space
 	 * 
-	 * @param maxSpace .. maximum value of search space
+	 * @param maxSpace           .. maximum value of search space
 	 * 
 	 * @return HarmonyResult
 	 */
@@ -128,20 +134,21 @@ public class Main {
 		// Initialize HarmonyMemory with HarmonyParameters
 		HarmonyMemory memory = new HarmonyMemory(hpa, statesToEvaluateList, spaceMin, spaceMax);
 
-		
-		 Printer.printHeader("INITIAL MEMORY"); memory.print();
-		 
+		Printer.printHeader("INITIAL MEMORY");
+		memory.print();
+
 		HarmonySearch search = new HarmonySearch(memory, hpa, spaceMin, spaceMax);
 
 		// Execute harmony search: If parameter "stopIfOptimumFound" is true,
 		// max number of iterations is still respected (here: max 300 iterations)
 		HarmonyResult hs = search.execHarmonySearch(nrOfIterations, stopIfOptimumFound, statesToEvaluateList,
 				PRINT_NEW_SOLUTIONS, PRINT_MEMORY_SWAPS);
-		
-		 Printer.printHeader("MEMORY RESULTS"); memory.print();
-		 
+
+		Printer.printHeader("MEMORY RESULTS");
+		memory.print();
+
 		Printer.printHeader("HARMONY RESULTS");
-		
+
 		System.out.println(hs);
 		Printer.printHeader("BEST");
 		memory.print(memory.findBestEvalResult());
