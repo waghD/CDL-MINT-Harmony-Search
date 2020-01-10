@@ -15,10 +15,14 @@ public class HarmonySearch {
 
 	private HarmonyMemory harmonyMemory;
 	private HarmonyParameters harmonyParameters;
+	private double spaceMin; //minimum of search space
+	private double spaceMax; //maxiumum of search space
 
-	public HarmonySearch(HarmonyMemory memory, HarmonyParameters params) {
+	public HarmonySearch(HarmonyMemory memory, HarmonyParameters params, double spaceMin, double spaceMax) {
 		harmonyMemory = memory;
 		harmonyParameters = params;
+		this.spaceMin = spaceMin;
+		this.spaceMax = spaceMax;
 	}
 	
 	/**
@@ -62,56 +66,42 @@ public class HarmonySearch {
 			}
 			// int nrOfProperties = hpa.getSolutions().get(0).size()
 			for (int z = 0; z < propertyNamesList.size(); z++) {
+				
 				String curPropertyName = propertyNamesList.get(z);
-				if (rand.nextDouble() < harmonyParameters.getR_accept()) {
-					int nrOfSolutionsInMemory = harmonyMemory.getMemory().size();
-					
-					newSolution
-					.get(curPropertyName)
-					.setLower(
-							harmonyMemory
-							.getMemory()
-							.get(rand.nextInt(nrOfSolutionsInMemory))
-							.get(curPropertyName)
-							.getLower()
-							);
-					
-					newSolution
-					.get(curPropertyName)
-					.setUpper(
-							harmonyMemory
-							.getMemory()
-							.get(rand.nextInt(nrOfSolutionsInMemory))
-							.get(curPropertyName)
-							.getUpper()
-							);
-
-					if (rand.nextDouble() < harmonyParameters.getR_pa()) {
-						newSolution
-						.get(curPropertyName)
-						.setLower(
-								newSolution
-								.get(curPropertyName)
-								.getLower() + ThreadLocalRandom.current().nextDouble(0, 1) * harmonyParameters.getBand()
-								);
+				double[] solVec = new double[2]; //solution vector
+				
+				for(int j = 0; j < 2; j++) {
+					if (rand.nextDouble() < harmonyParameters.getR_accept()) {
+						int nrOfSolutionsInMemory = harmonyMemory.getMemory().size();
 						
-						newSolution
-						.get(curPropertyName)
-						.setUpper(
-								newSolution
+						solVec[j] = 
+								harmonyMemory
+								.getMemory()
+								.get(rand.nextInt(nrOfSolutionsInMemory))
 								.get(curPropertyName)
-								.getUpper() + ThreadLocalRandom.current().nextDouble(0, 1) * harmonyParameters.getBand()
-								);
+								.getAsArray()[j];
+						
+						if (rand.nextDouble() < harmonyParameters.getR_pa()) {
+							solVec[j] = solVec[j] + (nextRandDoubleRandSign(0, 1) * harmonyParameters.getBand());
+						}
+					} else {
+						
+						solVec[j] = nextRandDouble(spaceMin, spaceMax);
+						
+						solVec[j] = nextRandDouble(spaceMin, spaceMax);
 					}
-				} else {
-					newSolution
-					.get(curPropertyName)
-					.setLower(ThreadLocalRandom.current().nextDouble(0, harmonyParameters.getBand()));
-					
-					newSolution
-					.get(curPropertyName)
-					.setUpper(ThreadLocalRandom.current().nextDouble(0, harmonyParameters.getBand()));
 				}
+				
+				
+				newSolution
+				.get(curPropertyName)
+				.setLower(solVec[0]);
+				
+				newSolution
+				.get(curPropertyName)
+				.setUpper(solVec[1]);
+			
+				
 
 			}
 			if(printNewSolutions) {
@@ -134,4 +124,30 @@ public class HarmonySearch {
 		return hs;
 	}
 
+	 public double nextRandDouble(double lower, double upper) {
+		 	Random rand = new Random();
+		   	return rand.nextDouble() * (upper - lower) + lower;
+	 }
+	 
+	 public double nextRandDoubleRandSign(double lower, double upper) {
+		 	Random rand = new Random();
+		   	double rv = rand.nextDouble() * (upper - lower) + lower;
+		   	return rand.nextDouble() >= 0.5 ? rv:(rv*-1);
+	 }
+	 
+	 public double getSpaceMin() {
+			return spaceMin;
+		}
+
+		public void setSpaceMin(double spaceMin) {
+			this.spaceMin = spaceMin;
+		}
+		
+		public double getSpaceMax() {
+			return spaceMax;
+		}
+
+		public void setSpaceMax(double spaceMax) {
+			this.spaceMax = spaceMax;
+		}
 }

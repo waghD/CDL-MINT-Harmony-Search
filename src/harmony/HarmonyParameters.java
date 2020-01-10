@@ -12,6 +12,7 @@ public class HarmonyParameters {
 	private double band; //bandwidth
 	private double r_accept; //acceptance rate
 	private int memorySize;
+
 	private List<AxisStream> axisStream;
 
 	/**
@@ -29,6 +30,8 @@ public class HarmonyParameters {
 		this.r_accept = r_accept;
 		this.memorySize = memorySize;
 		this.axisStream = axisStream;
+		
+		
 	}
 
 	public double getR_pa() {
@@ -46,6 +49,8 @@ public class HarmonyParameters {
 	public void setBand(double band) {
 		this.band = band;
 	}
+	
+	
 
 	public double getR_accept() {
 		return r_accept;

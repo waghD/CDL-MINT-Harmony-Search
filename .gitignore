@@ -19,6 +19,9 @@ target/
 #output files
 modelTest/
 
+out_prints/
+output/
+
 # Package Files #
 *.jar
 *.war

@@ -21,6 +21,7 @@ public class StateQuery {
 				.append(generateFrom(stateAssignments))
 				.append(generateWhere(stateAssignments, propertyMap))
 				.toString();
+		
 		return result;
 	}
 	

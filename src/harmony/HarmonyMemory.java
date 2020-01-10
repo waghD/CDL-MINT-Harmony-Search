@@ -1,10 +1,12 @@
 package harmony;
 
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import design.Property;
 import main.AxisStream;
@@ -28,9 +30,12 @@ public class HarmonyMemory {
 		this.axisStream = axisStream;
 	}
 
-	public HarmonyMemory(HarmonyParameters params, List<String> statesToEvaluateList) {
+	public List<Map<String, PropertyBoundaries>> getSolutions() {
+		return this.solutions;
+	}
+	public HarmonyMemory(HarmonyParameters params, List<String> statesToEvaluateList, double spaceMin, double spaceMax) {
 		axisStream = params.getAxisStreams();
-		solutions = this.generateDefaultMemory(axisStream, params.getMemorySize());
+		solutions = this.generateDefaultMemory(axisStream, params.getMemorySize(), spaceMin, spaceMax);
 		Evaluation eval = Evaluation.instance;
 
 		fitness = new List[params.getMemorySize()];
@@ -90,8 +95,6 @@ public class HarmonyMemory {
 			}
 			solutions.set(worstResultIdx, newSolution);
 			fitness[worstResultIdx] = newResult;
-
-			System.out.println();
 			foundOptimum = true;
 			for (int i = 0; i < newResult.size(); i++) {
 				EvaluationResult stateResult = newResult.get(i);
@@ -126,6 +129,28 @@ public class HarmonyMemory {
 		}
 		return worstIndex;
 	}
+	
+	/**
+	 * Determines worst result in list of solution maps.
+	 * 
+	 * Worst solution is determined by worst precision/recall
+	 * 
+	 * @param evalResultListofLists
+	 * @return
+	 */
+	public int findBestEvalResult() {
+		int bestIndex = 0;
+		int index = 0;
+		List<EvaluationResult> bestEvalResult = this.fitness[0];
+		for (List<EvaluationResult> evalResultList : this.fitness) {
+			if (cmpListEvalResults(evalResultList, bestEvalResult) > 0) {
+				bestEvalResult = evalResultList;
+				bestIndex = index;
+			}
+			index++;
+		}
+		return bestIndex;
+	}
 
 	/**
 	 * Compares two EvaluationResult objects and determines result from worse
@@ -158,7 +183,14 @@ public class HarmonyMemory {
 		avgPrecisionList2 /= evalList2.size();
 		avgRecallList2 /= evalList2.size();
 
-		if (avgPrecisionList1 > avgPrecisionList2) {
+		if ((avgPrecisionList1 + avgRecallList1) > (avgPrecisionList2 + avgRecallList2)) {
+			return 1;
+		} else if ((avgPrecisionList1 + avgRecallList1) == (avgPrecisionList2 + avgRecallList2)) {
+			return 0;
+		} else {
+			return -1;
+		}
+		/*if (avgPrecisionList1 > avgPrecisionList2) {
 			return 1;
 		} else if (avgPrecisionList1 < avgPrecisionList2) {
 			return -1;
@@ -169,7 +201,7 @@ public class HarmonyMemory {
 			return -1;
 		} else {
 			return 0;
-		}
+		}*/
 	}
 
 	/**
@@ -193,32 +225,60 @@ public class HarmonyMemory {
 			System.out.println();
 		}
 	}
+	
+	/**
+	 * Prints the solutions (= total deviances per sensor) with resulting measures
+	 * 
+	 * @param solutions .. list of solution maps
+	 */
+	public void print(int idx) {
+			Map<String, PropertyBoundaries> curMap = solutions.get(idx);
+			Iterator<Map.Entry<String, PropertyBoundaries>> it = curMap.entrySet().iterator();
+			System.out.println(Printer.div + "\nSolution " + (idx + 1) + " in memory\n" + Printer.div);
+			curMap.forEach((propertyName, boundaries) -> System.out.printf("%s: %.3f, %.3f\n", propertyName,
+					boundaries.getLower(), boundaries.getUpper()));
 
-	private List<Map<String, PropertyBoundaries>> generateDefaultMemory(List<AxisStream> axisList, int memorySize) {
-		double startDev = 0.1;
-		// Initialize solution map with expected abs. sensor deviations
-		Map<String, PropertyBoundaries> defaultSolutions = new HashMap<String, PropertyBoundaries>();
-		if (axisList.contains(AxisStream.BP)) {
-			defaultSolutions.put(AxisStream.BP.getAxisName(), new PropertyBoundaries(startDev, startDev));
-		}
-		if (axisList.contains(AxisStream.GP)) {
-			defaultSolutions.put(AxisStream.GP.getAxisName(), new PropertyBoundaries(startDev, startDev));
-		}
-		if (axisList.contains(AxisStream.MAP)) {
-			defaultSolutions.put(AxisStream.MAP.getAxisName(), new PropertyBoundaries(startDev, startDev));
-		}
-		if (axisList.contains(AxisStream.SAP)) {
-			defaultSolutions.put(AxisStream.SAP.getAxisName(), new PropertyBoundaries(startDev, startDev));
-		}
-		if (axisList.contains(AxisStream.WP)) {
-			defaultSolutions.put(AxisStream.WP.getAxisName(), new PropertyBoundaries(startDev, startDev));
-		}
+			List<EvaluationResult> solutionEvalResults = fitness[idx];
+			for (EvaluationResult solEvalResult : solutionEvalResults) {
+				System.out.printf("\n=> %s: Precision: %.2f  Recall: %.2f", solEvalResult.getState(),
+						solEvalResult.getPrecision(), solEvalResult.getRecall());
+			}
+			System.out.println();
+	
+	}
+
+	private List<Map<String, PropertyBoundaries>> generateDefaultMemory(List<AxisStream> axisList, int memorySize, double spaceMin, double spaceMax) {
+		Random rand = new Random();
 		List<Map<String, PropertyBoundaries>> initialMemory = new ArrayList<Map<String, PropertyBoundaries>>();
 
-		// Initialize harmony memory with equal solution maps
+		// Initialize solution map with expected abs. sensor deviations
 		for (int memorySolutions = 0; memorySolutions < memorySize; memorySolutions++) {
+			Map<String, PropertyBoundaries> defaultSolutions = new HashMap<String, PropertyBoundaries>();
+			if (axisList.contains(AxisStream.BP)) {
+				defaultSolutions.put(AxisStream.BP.getAxisName(), new PropertyBoundaries(nextRandDouble(spaceMin, spaceMax), nextRandDouble(spaceMin, spaceMax)));
+			}
+			if (axisList.contains(AxisStream.GP)) {
+				defaultSolutions.put(AxisStream.GP.getAxisName(), new PropertyBoundaries(nextRandDouble(spaceMin, spaceMax), nextRandDouble(spaceMin, spaceMax)));
+			}
+			if (axisList.contains(AxisStream.MAP)) {
+				defaultSolutions.put(AxisStream.MAP.getAxisName(), new PropertyBoundaries(nextRandDouble(spaceMin, spaceMax), nextRandDouble(spaceMin, spaceMax)));
+			}
+			if (axisList.contains(AxisStream.SAP)) {
+				defaultSolutions.put(AxisStream.SAP.getAxisName(), new PropertyBoundaries(nextRandDouble(spaceMin, spaceMax), nextRandDouble(spaceMin, spaceMax)));
+			}
+			if (axisList.contains(AxisStream.WP)) {
+				defaultSolutions.put(AxisStream.WP.getAxisName(), new PropertyBoundaries(nextRandDouble(spaceMin, spaceMax), nextRandDouble(spaceMin, spaceMax)));
+			}
+	
+			// Initialize harmony memory with equal solution maps
+			
 			initialMemory.add(defaultSolutions);
 		}
 		return initialMemory;
 	}
+	
+	 private double nextRandDouble(double lower, double upper) {
+		 	Random rand = new Random();
+		   	return rand.nextDouble() * (upper - lower) + lower;
+	 }
 }

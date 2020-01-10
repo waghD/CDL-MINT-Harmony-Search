@@ -95,7 +95,7 @@ public class Evaluation {
 			return new ArrayList<IdentifiedState>();
 		ArrayList<IdentifiedState> result = new ArrayList<IdentifiedState>();
 		for (State s : b.getAssignedState()) {
-			if(statesToEvaluateList.size() == 0 || statesToEvaluateList.contains(s.getName())) {
+			if(statesToEvaluateList.size() == 0 || !statesToEvaluateList.contains(s.getName())) {
 				result.addAll(db.recognizeState(s.getName(), s.getAssignedProperties(), propertyMap));
 			}
 		}

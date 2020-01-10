@@ -32,6 +32,7 @@ public class TestData {
 		states.add(TestData.getRetrieveGripState(axisList));
 		states.add(TestData.getRetrieveState(axisList));
 		states.add(TestData.getWaitState(axisList));
+		
 
 		// SetUp Block
 		return new Block("roboticArm", states);
@@ -76,7 +77,6 @@ public class TestData {
 		}
 		return new State("PickUp", props);
 	}
-	
 	private static State getLiftState(List<AxisStream> axisList) {
 		List<Property> props = new ArrayList<Property>();
 		if (axisList.contains(AxisStream.BP)) {
@@ -96,7 +96,6 @@ public class TestData {
 		}
 		return new State("Lift", props);
 	}
-	
 	private static State getParkState(List<AxisStream> axisList) {
 		List<Property> props = new ArrayList<Property>();
 		if (axisList.contains(AxisStream.BP)) {
@@ -156,6 +155,7 @@ public class TestData {
 		}
 		return new State("FullRelease", props);
 	}
+	
 	
 	private static State getWaitState(List<AxisStream> axisList) {
 		List<Property> props = new ArrayList<Property>();
@@ -220,7 +220,7 @@ public class TestData {
 	private static State getDepositRedState(List<AxisStream> axisList) {
 		List<Property> props = new ArrayList<Property>();
 		if (axisList.contains(AxisStream.BP)) {
-			props.add(new Property("bp", 1.449));
+			props.add(new Property("bp", -1.449));
 		}
 		if (axisList.contains(AxisStream.MAP)) {
 			props.add(new Property("map", 0.942));
@@ -232,7 +232,7 @@ public class TestData {
 			props.add(new Property("sap", -0.89));
 		}
 		if (axisList.contains(AxisStream.WP)) {
-			props.add(new Property("wp", -1.5));
+			props.add(new Property("wp", 1.5));
 		}
 		return new State("DepositRed", props);
 	}
@@ -240,7 +240,7 @@ public class TestData {
 	private static State getReleaseRedState(List<AxisStream> axisList) {
 		List<Property> props = new ArrayList<Property>();
 		if (axisList.contains(AxisStream.BP)) {
-			props.add(new Property("bp", 1.449));
+			props.add(new Property("bp", -1.449));
 		}
 		if (axisList.contains(AxisStream.MAP)) {
 			props.add(new Property("map", 0.942));
@@ -252,7 +252,7 @@ public class TestData {
 			props.add(new Property("sap", -0.89));
 		}
 		if (axisList.contains(AxisStream.WP)) {
-			props.add(new Property("wp", -1.5));
+			props.add(new Property("wp", 1.5));
 		}
 		return new State("ReleaseRed", props);
 	}
@@ -260,13 +260,13 @@ public class TestData {
 	private static State getDepositGreenState(List<AxisStream> axisList) {
 		List<Property> props = new ArrayList<Property>();
 		if (axisList.contains(AxisStream.BP)) {
-			props.add(new Property("bp", 1.5));
+			props.add(new Property("bp", -1.745));
 		}
 		if (axisList.contains(AxisStream.MAP)) {
 			props.add(new Property("map", 0.942));
 		}
 		if (axisList.contains(AxisStream.GP)) {
-			props.add(new Property("gp", 0.4));
+			props.add(new Property("gp", -0.4));
 		}
 		if (axisList.contains(AxisStream.SAP)) {
 			props.add(new Property("sap", -0.89));
@@ -280,7 +280,7 @@ public class TestData {
 	private static State getReleaseGreenState(List<AxisStream> axisList) {
 		List<Property> props = new ArrayList<Property>();
 		if (axisList.contains(AxisStream.BP)) {
-			props.add(new Property("bp", 1.745));
+			props.add(new Property("bp", -1.745));
 		}
 		if (axisList.contains(AxisStream.MAP)) {
 			props.add(new Property("map", 0.942));

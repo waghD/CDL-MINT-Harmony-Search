@@ -26,4 +26,9 @@ public class PropertyBoundaries {
 		return String.format("%.6f, %.6f", this.lower, this.upper);
 		
 	}
+	
+	public double[] getAsArray() {
+		double[] arr = {lower, upper};
+		return arr;
+	}
 }
