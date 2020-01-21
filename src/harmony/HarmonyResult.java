@@ -1,9 +1,36 @@
 package harmony;
 
 public class HarmonyResult {
+	private boolean optimumFound;
 	private int nrOfIterationsForOptimum = 0;
 	private double runtimeAllIterations = 0;
 	private double runtimeTilOptimumFound = 0;
+	private double avgBestPrecision = 0;
+	private double avgBestRecall = 0;
+	
+	public double getAvgBestPrecision() {
+		return avgBestPrecision;
+	}
+	
+	public void setAvgBestPrecision(double prec) {
+		this.avgBestPrecision = prec;
+	}
+	
+	public double getAvgBestRecall() {
+		return avgBestRecall;
+	}
+	
+	public void setAvgBestRecall(double rec) {
+		this.avgBestRecall = rec;
+	}
+	
+	public boolean getOptimumFound() {
+		return optimumFound;
+	}
+	
+	public void setOptimumFound(boolean opt) {
+		this.optimumFound = opt;
+	}
 	
 	public int getNrOfIterationsForOptimum() {
 		return nrOfIterationsForOptimum;

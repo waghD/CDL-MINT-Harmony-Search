@@ -15,8 +15,8 @@ public class HarmonySearch {
 
 	private HarmonyMemory harmonyMemory;
 	private HarmonyParameters harmonyParameters;
-	private double spaceMin; //minimum of search space
-	private double spaceMax; //maxiumum of search space
+	private double spaceMin; // minimum of search space
+	private double spaceMax; // maxiumum of search space
 
 	public HarmonySearch(HarmonyMemory memory, HarmonyParameters params, double spaceMin, double spaceMax) {
 		harmonyMemory = memory;
@@ -24,7 +24,7 @@ public class HarmonySearch {
 		this.spaceMin = spaceMin;
 		this.spaceMax = spaceMax;
 	}
-	
+
 	/**
 	 * Executes harmony search on given harmony parameters.
 	 * 
@@ -41,17 +41,22 @@ public class HarmonySearch {
 	 * (rand >= acceptance rate)
 	 * 
 	 * 
-	 * @param nrOfIter          .. number of iterations (each yields a new solution)
-	 * @param stopIfOptimumFound .. if true, algorithm stops iteration loop when optimum is found
-	 * @param printNewSolutions .. print statements of newly generated solutions
-	 * @param printMemorySwaps  .. print statements of memory swaps
-	 * @return int .. number of iterations required to find optimum, 0 if no optimum was found
+	 * @param nrOfIter           .. number of iterations (each yields a new
+	 *                           solution)
+	 * @param stopIfOptimumFound .. if true, algorithm stops iteration loop when
+	 *                           optimum is found
+	 * @param printNewSolutions  .. print statements of newly generated solutions
+	 * @param printMemorySwaps   .. print statements of memory swaps
+	 * @return int .. number of iterations required to find optimum, 0 if no optimum
+	 *         was found
 	 */
-	public HarmonyResult execHarmonySearch(int nrOfIter, boolean stopIfOptimumFound,  List<String> statesToEvaluateList, boolean printNewSolutions, boolean printMemorySwaps) {
+	public HarmonyResult execHarmonySearch(int nrOfIter, boolean stopIfOptimumFound, List<String> statesToEvaluateList,
+			boolean printNewSolutions, boolean printMemorySwaps) {
 		Random rand = new Random();
 		HarmonyResult hs = new HarmonyResult();
 
-		if (printNewSolutions || printMemorySwaps) Printer.printHeader("ALGORITHM START");
+		if (printNewSolutions || printMemorySwaps)
+			Printer.printHeader("ALGORITHM START");
 		long startIterTime = System.currentTimeMillis();
 		for (int i = 0; i < nrOfIter; i++) {
 			// Init new solution map
@@ -66,88 +71,81 @@ public class HarmonySearch {
 			}
 			// int nrOfProperties = hpa.getSolutions().get(0).size()
 			for (int z = 0; z < propertyNamesList.size(); z++) {
-				
+
 				String curPropertyName = propertyNamesList.get(z);
-				double[] solVec = new double[2]; //solution vector
-				
-				for(int j = 0; j < 2; j++) {
+				double[] solVec = new double[2]; // solution vector
+
+				for (int j = 0; j < 2; j++) {
 					if (rand.nextDouble() < harmonyParameters.getR_accept()) {
 						int nrOfSolutionsInMemory = harmonyMemory.getMemory().size();
-						
-						solVec[j] = 
-								harmonyMemory
-								.getMemory()
-								.get(rand.nextInt(nrOfSolutionsInMemory))
-								.get(curPropertyName)
-								.getAsArray()[j];
-						
+
+						solVec[j] = harmonyMemory.getMemory().get(rand.nextInt(nrOfSolutionsInMemory))
+								.get(curPropertyName).getAsArray()[j];
+
 						if (rand.nextDouble() < harmonyParameters.getR_pa()) {
 							solVec[j] = solVec[j] + (nextRandDoubleRandSign(0, 1) * harmonyParameters.getBand());
 						}
 					} else {
-						
+
 						solVec[j] = nextRandDouble(spaceMin, spaceMax);
-						
+
 						solVec[j] = nextRandDouble(spaceMin, spaceMax);
 					}
 				}
-				
-				
-				newSolution
-				.get(curPropertyName)
-				.setLower(solVec[0]);
-				
-				newSolution
-				.get(curPropertyName)
-				.setUpper(solVec[1]);
-			
-				
+
+				newSolution.get(curPropertyName).setLower(solVec[0]);
+
+				newSolution.get(curPropertyName).setUpper(solVec[1]);
 
 			}
-			if(printNewSolutions) {
-				Printer.printHeader("New solution (" + (i+1) + ". iteration)");
+			if (printNewSolutions) {
+				Printer.printHeader("New solution (" + (i + 1) + ". iteration)");
 				newSolution.forEach((propertyName, boundaries) -> System.out.println(propertyName + ": " + boundaries));
-				
+
 			}
-			
+
 			boolean foundOptimum = harmonyMemory.evalSolution(newSolution, printMemorySwaps, statesToEvaluateList);
-			//only remember iteration where FIRST optimum was found
-			if(foundOptimum && hs.getNrOfIterationsForOptimum() == 0) {
-				hs.setRuntimeTilOptimumFound((System.currentTimeMillis() - startIterTime)/1000.0);
-				hs.setNrOfIterationsForOptimum(i+1);
-				if(stopIfOptimumFound) {
+			boolean isBest = harmonyMemory.isSolutionBest(newSolution);
+			// only remember iteration where FIRST optimum was found
+			if (foundOptimum || isBest) {
+				hs.setRuntimeTilOptimumFound((System.currentTimeMillis() - startIterTime) / 1000.0);
+				hs.setNrOfIterationsForOptimum(i + 1);
+				hs.setOptimumFound(foundOptimum);
+				hs.setAvgBestPrecision(harmonyMemory.getBestAvgPrecision());
+				hs.setAvgBestRecall(harmonyMemory.getBestAvgRecall());
+				if (stopIfOptimumFound) {
 					break;
 				}
 			}
 		}
-		hs.setRuntimeIterations((System.currentTimeMillis() - startIterTime)/1000.0);
+		hs.setRuntimeIterations((System.currentTimeMillis() - startIterTime) / 1000.0);
 		return hs;
 	}
 
-	 public double nextRandDouble(double lower, double upper) {
-		 	Random rand = new Random();
-		   	return rand.nextDouble() * (upper - lower) + lower;
-	 }
-	 
-	 public double nextRandDoubleRandSign(double lower, double upper) {
-		 	Random rand = new Random();
-		   	double rv = rand.nextDouble() * (upper - lower) + lower;
-		   	return rand.nextDouble() >= 0.5 ? rv:(rv*-1);
-	 }
-	 
-	 public double getSpaceMin() {
-			return spaceMin;
-		}
+	public double nextRandDouble(double lower, double upper) {
+		Random rand = new Random();
+		return rand.nextDouble() * (upper - lower) + lower;
+	}
 
-		public void setSpaceMin(double spaceMin) {
-			this.spaceMin = spaceMin;
-		}
-		
-		public double getSpaceMax() {
-			return spaceMax;
-		}
+	public double nextRandDoubleRandSign(double lower, double upper) {
+		Random rand = new Random();
+		double rv = rand.nextDouble() * (upper - lower) + lower;
+		return rand.nextDouble() >= 0.5 ? rv : (rv * -1);
+	}
 
-		public void setSpaceMax(double spaceMax) {
-			this.spaceMax = spaceMax;
-		}
+	public double getSpaceMin() {
+		return spaceMin;
+	}
+
+	public void setSpaceMin(double spaceMin) {
+		this.spaceMin = spaceMin;
+	}
+
+	public double getSpaceMax() {
+		return spaceMax;
+	}
+
+	public void setSpaceMax(double spaceMax) {
+		this.spaceMax = spaceMax;
+	}
 }

@@ -46,10 +46,10 @@ public class Main {
 		eval.setUpRealDataStream(axisList);
 
 		PrintStream out = null;
-		List<Double> accList = new ArrayList<Double>(Arrays.asList(0.7));
-		List<Double> adjList = new ArrayList<Double>(Arrays.asList(0.3));
-		List<Integer> sizeList = new ArrayList<Integer>(Arrays.asList(10));
-		List<Double> bandwidthList = new ArrayList<Double>(Arrays.asList(0.3, 0.2, 0.1, 0.05, 0.01, 0.001));
+		List<Double> accList = new ArrayList<Double>(Arrays.asList(0.8));
+		List<Double> adjList = new ArrayList<Double>(Arrays.asList(0.4));
+		List<Integer> sizeList = new ArrayList<Integer>(Arrays.asList(50));
+		List<Double> bandwidthList = new ArrayList<Double>(Arrays.asList(0.05));
 		DecimalFormat df = new DecimalFormat("#.###");
 		df.setRoundingMode(RoundingMode.CEILING);
 
@@ -67,7 +67,8 @@ public class Main {
 
 						// states NOT to use for evaluation
 						// Set empty array to use all states!
-						List<String> statesToNotEvaluateList = new ArrayList<String>(Arrays.asList("Wait", "Idle"));
+						//List<String> statesToNotEvaluateList = new ArrayList<String>(Arrays.asList("Lift", "Park", "HalfRelease", "FullRelease", "Retrieve", "RetrieveGrip", "DepositRed", "ReleaseRed", "Wait", "Idle"));
+						List<String> statesToNotEvaluateList = new ArrayList<String>(Arrays.asList("Wait"));
 						List<HarmonyResult> resultList = new ArrayList<HarmonyResult>();
 
 						HarmonyParameters hpa = new HarmonyParameters(adj, bandwidth, acc, size, axisList);
@@ -76,12 +77,14 @@ public class Main {
 						System.out.println(hpa);
 
 						// number of iterations for average calculation
-						for (int i = 0; i < 1; i++) {
-							resultList.add(runHarmonySearch(hpa, 200, false, statesToNotEvaluateList, 0, 0.3));
+						for (int i = 0; i < 100; i++) {
+							resultList.add(runHarmonySearch(hpa, 500, true, statesToNotEvaluateList, 0, 0.3));
 						}
 
 						List<Integer> iterationsList = new ArrayList<Integer>();
 						List<Double> timeTilOptList = new ArrayList<Double>();
+						List<Double> avgPrecisionList = new ArrayList<Double>();
+						List<Double> avgRecallList = new ArrayList<Double>();
 
 						for (HarmonyResult res : resultList) {
 							// System.out.println("Iterations: " + res.getNrOfIterationsForOptimum() + " ("
@@ -90,13 +93,19 @@ public class Main {
 									+ res.getRuntimeTilOptimumFound() + "s)");
 							iterationsList.add(res.getNrOfIterationsForOptimum());
 							timeTilOptList.add(res.getRuntimeTilOptimumFound());
+							avgPrecisionList.add(res.getAvgBestPrecision());
+							avgRecallList.add(res.getAvgBestRecall());
 						}
 
 						System.out.println(Printer.div);
 						double avgIterations = iterationsList.stream().mapToInt(x -> x).average().orElse(-1);
 						double avgTimeTilOpt = timeTilOptList.stream().mapToDouble(x -> x).average().orElse(-1);
+						double avgPrec = avgPrecisionList.stream().mapToDouble(x -> x).average().orElse(-1);
+						double avgRec = avgRecallList.stream().mapToDouble(x -> x).average().orElse(-1);
 						System.out.println("Iterations (avg): " + avgIterations);
-						System.out.println("Time til Optimum found (avg): " + avgTimeTilOpt);
+						System.out.println("Time til Best found (avg): " + avgTimeTilOpt);
+						System.out.println("Avg Precision: " + avgPrec);
+						System.out.println("Avg Recall: " + avgRec);
 
 						/*
 						 * out.close(); File theFile = new File("output/156/rAccept_" +
@@ -134,8 +143,8 @@ public class Main {
 		// Initialize HarmonyMemory with HarmonyParameters
 		HarmonyMemory memory = new HarmonyMemory(hpa, statesToEvaluateList, spaceMin, spaceMax);
 
-		Printer.printHeader("INITIAL MEMORY");
-		memory.print();
+		//Printer.printHeader("INITIAL MEMORY");
+		//memory.print();
 
 		HarmonySearch search = new HarmonySearch(memory, hpa, spaceMin, spaceMax);
 
@@ -144,8 +153,8 @@ public class Main {
 		HarmonyResult hs = search.execHarmonySearch(nrOfIterations, stopIfOptimumFound, statesToEvaluateList,
 				PRINT_NEW_SOLUTIONS, PRINT_MEMORY_SWAPS);
 
-		Printer.printHeader("MEMORY RESULTS");
-		memory.print();
+		//Printer.printHeader("MEMORY RESULTS");
+		//memory.print();
 
 		Printer.printHeader("HARMONY RESULTS");
 

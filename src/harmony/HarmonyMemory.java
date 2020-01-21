@@ -104,7 +104,34 @@ public class HarmonyMemory {
 			}
 		}
 		return foundOptimum;
-
+	}
+	
+	public boolean isSolutionBest(Map<String, PropertyBoundaries> testSolution) {
+		int bestIndex = this.findBestEvalResult();
+		Map<String, PropertyBoundaries> bestSolution = this.solutions.get(bestIndex);
+		return bestSolution.equals(testSolution);
+	}
+	
+	public double getBestAvgPrecision() {
+		int bestIndex = this.findBestEvalResult();
+		List<EvaluationResult> best = this.fitness[bestIndex];
+		double avgPrec = 0.0;
+		for (EvaluationResult evalResult : best) {
+			avgPrec += evalResult.getPrecision();
+		}
+		avgPrec /= best.size();
+		return avgPrec;
+	}
+	
+	public double getBestAvgRecall() {
+		int bestIndex = this.findBestEvalResult();
+		List<EvaluationResult> best = this.fitness[bestIndex];
+		double avgRec = 0.0;
+		for (EvaluationResult evalResult : best) {
+			avgRec += evalResult.getRecall();
+		}
+		avgRec /= best.size();
+		return avgRec;
 	}
 
 	/**
@@ -218,8 +245,8 @@ public class HarmonyMemory {
 
 			List<EvaluationResult> solutionEvalResults = fitness[i];
 			for (EvaluationResult solEvalResult : solutionEvalResults) {
-				System.out.printf("\n=> %s: Precision: %.2f  Recall: %.2f", solEvalResult.getState(),
-						solEvalResult.getPrecision(), solEvalResult.getRecall());
+				System.out.printf("\n=> %s: Precision: %.2f  Recall: %.2f F-Measure: %.2f", solEvalResult.getState(),
+						solEvalResult.getPrecision(), solEvalResult.getRecall(), solEvalResult.getfMeasure());
 			}
 			System.out.println();
 		}

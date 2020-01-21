@@ -31,7 +31,7 @@ public class TestData {
 		states.add(TestData.getReleaseRedState(axisList));
 		states.add(TestData.getRetrieveGripState(axisList));
 		states.add(TestData.getRetrieveState(axisList));
-		states.add(TestData.getWaitState(axisList));
+		//states.add(TestData.getWaitState(axisList));
 		
 
 		// SetUp Block
