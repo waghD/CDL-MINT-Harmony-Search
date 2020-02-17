@@ -36,7 +36,7 @@ public class Main {
 
 	public static void main(String[] args) {
 		setUpDatabase("./lib/Daten_uc2.csv", false, 0);
-		Evaluation eval = new Evaluation("./lib/realStates_uc_2.csv");
+		Evaluation eval = new Evaluation("./lib/realstates_uc_2.csv");
 		// SetUp all information about the states in the files
 
 		// Test
@@ -47,9 +47,9 @@ public class Main {
 
 		PrintStream out = null;
 		List<Double> accList = new ArrayList<Double>(Arrays.asList(0.8));
-		List<Double> adjList = new ArrayList<Double>(Arrays.asList(0.3));
-		List<Integer> sizeList = new ArrayList<Integer>(Arrays.asList(10));
-		List<Double> bandwidthList = new ArrayList<Double>(Arrays.asList(0.1));
+		List<Double> adjList = new ArrayList<Double>(Arrays.asList(0.4));
+		List<Integer> sizeList = new ArrayList<Integer>(Arrays.asList(50));
+		List<Double> bandwidthList = new ArrayList<Double>(Arrays.asList(0.05));
 		DecimalFormat df = new DecimalFormat("#.###");
 		df.setRoundingMode(RoundingMode.CEILING);
 
@@ -57,7 +57,7 @@ public class Main {
 			for (double adj : adjList) {
 				for (int size : sizeList) {
 					for (double bandwidth : bandwidthList) {
-
+						System.out.format("Setting: Acc:%.2f Adj:%.2f size:%d band:%.3f", acc, adj, size, bandwidth);
 						/*
 						 * try { out = new PrintStream(new FileOutputStream("output/156/rAccept_" +
 						 * String.valueOf(acc) + "_band_0.1_rAdj_" + String.valueOf(adj) + "_memSize_" +
@@ -68,7 +68,7 @@ public class Main {
 						// states NOT to use for evaluation
 						// Set empty array to use all states!
 						//List<String> statesToNotEvaluateList = new ArrayList<String>(Arrays.asList("Lift", "Park", "HalfRelease", "FullRelease", "Retrieve", "RetrieveGrip", "DepositRed", "ReleaseRed", "Wait", "Idle"));
-						List<String> statesToNotEvaluateList = new ArrayList<String>(Arrays.asList("Wait"));
+						List<String> statesToNotEvaluateList = new ArrayList<String>(Arrays.asList("Start","DriveDown","PickUp","Release", "Idle", "Lift", "Forwarding"));
 						List<HarmonyResult> resultList = new ArrayList<HarmonyResult>();
 
 						HarmonyParameters hpa = new HarmonyParameters(adj, bandwidth, acc, size, axisList);
@@ -78,7 +78,7 @@ public class Main {
 
 						// number of iterations for average calculation
 						for (int i = 0; i < 1; i++) {
-							resultList.add(runHarmonySearch(hpa, 500, false, statesToNotEvaluateList, 0, 0.4));
+							resultList.add(runHarmonySearch(hpa, 3000, false, statesToNotEvaluateList, 0, 0.4));
 						}
 
 						List<Integer> iterationsList = new ArrayList<Integer>();

@@ -217,7 +217,6 @@ public class Evaluation {
 				Instant instant = Instant.from(ISO8601_FORMATTER.parse(timestamp));
 				LocalDateTime ldt = LocalDateTime.ofInstant(instant, ZoneId.from(ISO8601_FORMATTER.parse(timestamp)));
 				s.setTimestamp(ldt.toString());
-				System.out.println("Added state: " + s);
 				realStates.add(s);
 			}
 
@@ -245,6 +244,7 @@ public class Evaluation {
 	}
 
 	private double calculateFMeasure(double precision, double recall) {
+		if(precision == 0.0 && recall == 0.0) return 0.0;
 		return 2 * (precision * recall) / (precision + recall);
 	}
 }

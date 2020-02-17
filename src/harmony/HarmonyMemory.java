@@ -257,6 +257,32 @@ public class HarmonyMemory {
 	 * 
 	 * @param solutions .. list of solution maps
 	 */
+	public void print() {
+		for (int i = 0; i < solutions.size(); i++) {
+			Map<String, PropertyBoundaries> curMap = solutions.get(i);
+			Iterator<Map.Entry<String, PropertyBoundaries>> it = curMap.entrySet().iterator();
+			System.out.println(Printer.div + "\nSolution " + (i + 1) + " in memory\n" + Printer.div);
+			curMap.forEach((propertyName, boundaries) -> System.out.printf("%s: %.3f, %.3f\n", propertyName,
+					boundaries.getLower(), boundaries.getUpper()));
+
+			List<EvaluationResult> solutionEvalResults = fitness[i];
+			List<Double> fmeasureList = new ArrayList<Double>();
+
+			for (EvaluationResult solEvalResult : solutionEvalResults) {
+				System.out.printf("\n=> %s: Precision: %.2f  Recall: %.2f", solEvalResult.getState(),
+						solEvalResult.getPrecision(), solEvalResult.getRecall());
+				fmeasureList.add(solEvalResult.getfMeasure());
+
+			}
+			System.out.printf("\n\nf-measure: %.3f\n\n", fmeasureList.stream().mapToDouble(x -> x).average().orElse(-1));
+		}
+	}
+	
+	/**
+	 * Prints the solutions (= total deviances per sensor) with resulting measures
+	 * 
+	 * @param solutions .. list of solution maps
+	 */
 	public void print(int idx) {
 			Map<String, PropertyBoundaries> curMap = solutions.get(idx);
 			Iterator<Map.Entry<String, PropertyBoundaries>> it = curMap.entrySet().iterator();
@@ -265,11 +291,14 @@ public class HarmonyMemory {
 					boundaries.getLower(), boundaries.getUpper()));
 
 			List<EvaluationResult> solutionEvalResults = fitness[idx];
+			List<Double> fmeasureList = new ArrayList<Double>();
 			for (EvaluationResult solEvalResult : solutionEvalResults) {
 				System.out.printf("\n=> %s: Precision: %.2f  Recall: %.2f", solEvalResult.getState(),
 						solEvalResult.getPrecision(), solEvalResult.getRecall());
+				fmeasureList.add(solEvalResult.getfMeasure());
+				
 			}
-			System.out.println();
+			System.out.printf("\n\nf-measure: %.3f\n\n", fmeasureList.stream().mapToDouble(x -> x).average().orElse(-1));
 	
 	}
 

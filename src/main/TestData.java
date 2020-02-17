@@ -47,14 +47,11 @@ public class TestData {
 			document.getDocumentElement().normalize();
 			//Here comes the root node
 			Element root = document.getDocumentElement();
-			System.out.println(root.getNodeName());
 			 
 			//Get all employees
 			NodeList nList = document.getElementsByTagName("state");
-			System.out.println("============================");
 			for (int temp = 0; temp < nList.getLength(); temp++) {
 				 Node node = nList.item(temp);
-				 System.out.println("");   
 				 if (node.getNodeType() == Node.ELEMENT_NODE) {
 					
 					    //Print each employee's detail
