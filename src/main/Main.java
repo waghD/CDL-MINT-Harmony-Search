@@ -47,9 +47,9 @@ public class Main {
 
 		PrintStream out = null;
 		List<Double> accList = new ArrayList<Double>(Arrays.asList(0.8));
-		List<Double> adjList = new ArrayList<Double>(Arrays.asList(0.4));
-		List<Integer> sizeList = new ArrayList<Integer>(Arrays.asList(50));
-		List<Double> bandwidthList = new ArrayList<Double>(Arrays.asList(0.05));
+		List<Double> adjList = new ArrayList<Double>(Arrays.asList(0.3));
+		List<Integer> sizeList = new ArrayList<Integer>(Arrays.asList(10));
+		List<Double> bandwidthList = new ArrayList<Double>(Arrays.asList(0.1));
 		DecimalFormat df = new DecimalFormat("#.###");
 		df.setRoundingMode(RoundingMode.CEILING);
 
@@ -77,8 +77,8 @@ public class Main {
 						System.out.println(hpa);
 
 						// number of iterations for average calculation
-						for (int i = 0; i < 100; i++) {
-							resultList.add(runHarmonySearch(hpa, 500, true, statesToNotEvaluateList, 0, 0.3));
+						for (int i = 0; i < 1; i++) {
+							resultList.add(runHarmonySearch(hpa, 300, true, statesToNotEvaluateList, 0, 0.4));
 						}
 
 						List<Integer> iterationsList = new ArrayList<Integer>();

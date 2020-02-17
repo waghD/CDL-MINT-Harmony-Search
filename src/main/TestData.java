@@ -1,9 +1,22 @@
 package main;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import design.Block;
 import design.Property;
@@ -11,309 +24,100 @@ import design.State;
 
 public class TestData {
 
+	public static String MODEL_FILE_PATH = "model/System4.xmi";
 	/**
 	 * Sets up block object with data streams
 	 * 
 	 * @return Block
+	 * @throws IOException 
+	 * @throws SAXException 
 	 */
 	public static Block setUpDataStream(List<AxisStream> axisList) {
 		List<State> states = new ArrayList<State>();
-		states.add(TestData.getDriveDownState(axisList));
-		states.add(TestData.getPickupState(axisList));
-		states.add(TestData.getDepositGreenState(axisList));
-		states.add(TestData.getDepositRedState(axisList));
-		states.add(TestData.getFullReleaseState(axisList));
-		states.add(TestData.getHalfReleaseState(axisList));
-		states.add(TestData.getIdleState(axisList));
-		states.add(TestData.getLiftState(axisList));
-		states.add(TestData.getParkState(axisList));
-		states.add(TestData.getReleaseGreenState(axisList));
-		states.add(TestData.getReleaseRedState(axisList));
-		states.add(TestData.getRetrieveGripState(axisList));
-		states.add(TestData.getRetrieveState(axisList));
-		//states.add(TestData.getWaitState(axisList));
-		
 
+		
+		try {
+			//Get Document Builder
+			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+			DocumentBuilder builder = factory.newDocumentBuilder();
+			//Build Document
+			Document document = builder.parse(new File(MODEL_FILE_PATH));
+			 
+			//Normalize the XML Structure; It's just too important !!
+			document.getDocumentElement().normalize();
+			//Here comes the root node
+			Element root = document.getDocumentElement();
+			System.out.println(root.getNodeName());
+			 
+			//Get all employees
+			NodeList nList = document.getElementsByTagName("state");
+			System.out.println("============================");
+			for (int temp = 0; temp < nList.getLength(); temp++) {
+				 Node node = nList.item(temp);
+				 System.out.println("");   
+				 if (node.getNodeType() == Node.ELEMENT_NODE) {
+					
+					    //Print each employee's detail
+					    Element sElement = (Element) node;
+					    String stateName = sElement.getAttribute("name");
+						List<Property> props = new ArrayList<Property>(Arrays.asList(null, null, null, null, null));
+					    NodeList assignmentList = sElement.getElementsByTagName("assignment" );
+					    for(int i = 0; i < assignmentList.getLength(); i++) {
+							 Node assignmentNode = assignmentList.item(i);
+							 if (node.getNodeType() == Node.ELEMENT_NODE) {
+								 Element assignmentElement = (Element) assignmentNode;
+							 	 String valString = assignmentElement.getAttribute("value");
+							 	 double val = 0.0;
+							 	 if(valString.length() > 0) {
+							 		val = Double.parseDouble(valString);
+							 	 }
+							 	 String propName = assignmentElement.getAttribute("property");
+								 switch(propName) {
+								 	case "//@block.0/@property.0":
+								 		if(axisList.contains(AxisStream.BP)) {
+								 			props.set(0, new Property("bp", val));
+								 		}
+								 		break;
+									case "//@block.0/@property.1":
+								 		if(axisList.contains(AxisStream.MAP)) {
+								 			props.set(1, new Property("map", val));
+								 		}
+								 		break;
+									case "//@block.0/@property.2":
+								 		if(axisList.contains(AxisStream.GP)) {
+								 			props.set(2, new Property("gp", val));
+								 		}
+								 		break;
+									case "//@block.0/@property.3":
+								 		if(axisList.contains(AxisStream.SAP)) {
+								 			props.set(3, new Property("sap", val));
+								 		}
+								 		break;
+									case "//@block.0/@property.4":
+								 		if(axisList.contains(AxisStream.WP)) {
+								 			props.set(4, new Property("wp", val));
+								 		}
+								 		break;
+								 		
+								 }
+							 }
+					    }
+					    states.add(new State(stateName, props));
+				 }
+			}
+		} catch (ParserConfigurationException|IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (SAXException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		 
+	
+		
+			
 		// SetUp Block
 		return new Block("roboticArm", states);
 	}
 	
-	private static State getDriveDownState(List<AxisStream> axisList) {
-		List<Property> props = new ArrayList<Property>();
-		if (axisList.contains(AxisStream.BP)) {
-			props.add(new Property("bp", 0));
-		}
-		if (axisList.contains(AxisStream.MAP)) {
-			props.add(new Property("map", 1.5));
-		}
-		if (axisList.contains(AxisStream.GP)) {
-			props.add(new Property("gp", 1.5));
-		}
-		if (axisList.contains(AxisStream.SAP)) {
-			props.add(new Property("sap", -0.12));
-		}
-		if (axisList.contains(AxisStream.WP)) {
-			props.add(new Property("wp", 0));
-		}
-		return new State("DriveDown", props);
-	}
-	
-	private static State getPickupState(List<AxisStream> axisList) {
-		List<Property> props = new ArrayList<Property>();
-		if (axisList.contains(AxisStream.BP)) {
-			props.add(new Property("bp", 0));
-		}
-		if (axisList.contains(AxisStream.MAP)) {
-			props.add(new Property("map", 1.5));
-		}
-		if (axisList.contains(AxisStream.GP)) {
-			props.add(new Property("gp", -0.4));
-		}
-		if (axisList.contains(AxisStream.SAP)) {
-			props.add(new Property("sap", -0.12));
-		}
-		if (axisList.contains(AxisStream.WP)) {
-			props.add(new Property("wp", 0));
-		}
-		return new State("PickUp", props);
-	}
-	private static State getLiftState(List<AxisStream> axisList) {
-		List<Property> props = new ArrayList<Property>();
-		if (axisList.contains(AxisStream.BP)) {
-			props.add(new Property("bp", 0));
-		}
-		if (axisList.contains(AxisStream.MAP)) {
-			props.add(new Property("map", 1.1));
-		}
-		if (axisList.contains(AxisStream.GP)) {
-			props.add(new Property("gp", -0.4));
-		}
-		if (axisList.contains(AxisStream.SAP)) {
-			props.add(new Property("sap", -0.12));
-		}
-		if (axisList.contains(AxisStream.WP)) {
-			props.add(new Property("wp", 0));
-		}
-		return new State("Lift", props);
-	}
-	private static State getParkState(List<AxisStream> axisList) {
-		List<Property> props = new ArrayList<Property>();
-		if (axisList.contains(AxisStream.BP)) {
-			props.add(new Property("bp", 3.1));
-		}
-		if (axisList.contains(AxisStream.MAP)) {
-			props.add(new Property("map", 1.1));
-		}
-		if (axisList.contains(AxisStream.GP)) {
-			props.add(new Property("gp", -0.4));
-		}
-		if (axisList.contains(AxisStream.SAP)) {
-			props.add(new Property("sap", -1.55));
-		}
-		if (axisList.contains(AxisStream.WP)) {
-			props.add(new Property("wp", -1.5));
-		}
-		return new State("Park", props);
-	}
-	
-	private static State getHalfReleaseState(List<AxisStream> axisList) {
-		List<Property> props = new ArrayList<Property>();
-		if (axisList.contains(AxisStream.BP)) {
-			props.add(new Property("bp", 3.142));
-		}
-		if (axisList.contains(AxisStream.MAP)) {
-			props.add(new Property("map", 1.36));
-		}
-		if (axisList.contains(AxisStream.GP)) {
-			props.add(new Property("gp", -0.2));
-		}
-		if (axisList.contains(AxisStream.SAP)) {
-			props.add(new Property("sap", -1.34));
-		}
-		if (axisList.contains(AxisStream.WP)) {
-			props.add(new Property("wp", -1.5));
-		}
-		return new State("HalfRelease", props);
-	}
-	
-	private static State getFullReleaseState(List<AxisStream> axisList) {
-		List<Property> props = new ArrayList<Property>();
-		if (axisList.contains(AxisStream.BP)) {
-			props.add(new Property("bp", 3.142));
-		}
-		if (axisList.contains(AxisStream.MAP)) {
-			props.add(new Property("map", 1.36));
-		}
-		if (axisList.contains(AxisStream.GP)) {
-			props.add(new Property("gp", 1.0));
-		}
-		if (axisList.contains(AxisStream.SAP)) {
-			props.add(new Property("sap", -1.334));
-		}
-		if (axisList.contains(AxisStream.WP)) {
-			props.add(new Property("wp", -1.5));
-		}
-		return new State("FullRelease", props);
-	}
-	
-	
-	private static State getWaitState(List<AxisStream> axisList) {
-		List<Property> props = new ArrayList<Property>();
-		if (axisList.contains(AxisStream.BP)) {
-			props.add(new Property("bp", 3.142));
-		}
-		if (axisList.contains(AxisStream.MAP)) {
-			props.add(new Property("map", 1.36));
-		}
-		if (axisList.contains(AxisStream.GP)) {
-			props.add(new Property("gp", 1.0));
-		}
-		if (axisList.contains(AxisStream.SAP)) {
-			props.add(new Property("sap", -1.334));
-		}
-		if (axisList.contains(AxisStream.WP)) {
-			props.add(new Property("wp", -1.5));
-		}
-		return new State("Wait", props);
-	}
-	
-	private static State getRetrieveState(List<AxisStream> axisList) {
-		List<Property> props = new ArrayList<Property>();
-		if (axisList.contains(AxisStream.BP)) {
-			props.add(new Property("bp", 3.142));
-		}
-		if (axisList.contains(AxisStream.MAP)) {
-			props.add(new Property("map", 1.3));
-		}
-		if (axisList.contains(AxisStream.GP)) {
-			props.add(new Property("gp", 1.0));
-		}
-		if (axisList.contains(AxisStream.SAP)) {
-			props.add(new Property("sap", -1.3));
-		}
-		if (axisList.contains(AxisStream.WP)) {
-			props.add(new Property("wp", -1.5));
-		}
-		return new State("Retrieve", props);
-	}
-	
-	private static State getRetrieveGripState(List<AxisStream> axisList) {
-		List<Property> props = new ArrayList<Property>();
-		if (axisList.contains(AxisStream.BP)) {
-			props.add(new Property("bp", 3.142));
-		}
-		if (axisList.contains(AxisStream.MAP)) {
-			props.add(new Property("map", 1.3));
-		}
-		if (axisList.contains(AxisStream.GP)) {
-			props.add(new Property("gp", -0.4));
-		}
-		if (axisList.contains(AxisStream.SAP)) {
-			props.add(new Property("sap", -1.3));
-		}
-		if (axisList.contains(AxisStream.WP)) {
-			props.add(new Property("wp", -1.5));
-		}
-		return new State("RetrieveGrip", props);
-	}
-	
-	private static State getDepositRedState(List<AxisStream> axisList) {
-		List<Property> props = new ArrayList<Property>();
-		if (axisList.contains(AxisStream.BP)) {
-			props.add(new Property("bp", -1.449));
-		}
-		if (axisList.contains(AxisStream.MAP)) {
-			props.add(new Property("map", 0.942));
-		}
-		if (axisList.contains(AxisStream.GP)) {
-			props.add(new Property("gp", -0.4));
-		}
-		if (axisList.contains(AxisStream.SAP)) {
-			props.add(new Property("sap", -0.89));
-		}
-		if (axisList.contains(AxisStream.WP)) {
-			props.add(new Property("wp", 1.5));
-		}
-		return new State("DepositRed", props);
-	}
-	
-	private static State getReleaseRedState(List<AxisStream> axisList) {
-		List<Property> props = new ArrayList<Property>();
-		if (axisList.contains(AxisStream.BP)) {
-			props.add(new Property("bp", -1.449));
-		}
-		if (axisList.contains(AxisStream.MAP)) {
-			props.add(new Property("map", 0.942));
-		}
-		if (axisList.contains(AxisStream.GP)) {
-			props.add(new Property("gp", 0.5));
-		}
-		if (axisList.contains(AxisStream.SAP)) {
-			props.add(new Property("sap", -0.89));
-		}
-		if (axisList.contains(AxisStream.WP)) {
-			props.add(new Property("wp", 1.5));
-		}
-		return new State("ReleaseRed", props);
-	}
-	
-	private static State getDepositGreenState(List<AxisStream> axisList) {
-		List<Property> props = new ArrayList<Property>();
-		if (axisList.contains(AxisStream.BP)) {
-			props.add(new Property("bp", -1.745));
-		}
-		if (axisList.contains(AxisStream.MAP)) {
-			props.add(new Property("map", 0.942));
-		}
-		if (axisList.contains(AxisStream.GP)) {
-			props.add(new Property("gp", -0.4));
-		}
-		if (axisList.contains(AxisStream.SAP)) {
-			props.add(new Property("sap", -0.89));
-		}
-		if (axisList.contains(AxisStream.WP)) {
-			props.add(new Property("wp", 1.5));
-		}
-		return new State("DepositGreen", props);
-	}
-	
-	private static State getReleaseGreenState(List<AxisStream> axisList) {
-		List<Property> props = new ArrayList<Property>();
-		if (axisList.contains(AxisStream.BP)) {
-			props.add(new Property("bp", -1.745));
-		}
-		if (axisList.contains(AxisStream.MAP)) {
-			props.add(new Property("map", 0.942));
-		}
-		if (axisList.contains(AxisStream.GP)) {
-			props.add(new Property("gp", 0.5));
-		}
-		if (axisList.contains(AxisStream.SAP)) {
-			props.add(new Property("sap", -0.89));
-		}
-		if (axisList.contains(AxisStream.WP)) {
-			props.add(new Property("wp", 1.5));
-		}
-		return new State("ReleaseGreen", props);
-	}
-	
-	private static State getIdleState(List<AxisStream> axisList) {
-		List<Property> props = new ArrayList<Property>();
-		if (axisList.contains(AxisStream.BP)) {
-			props.add(new Property("bp", 0));
-		}
-		if (axisList.contains(AxisStream.MAP)) {
-			props.add(new Property("map", 0));
-		}
-		if (axisList.contains(AxisStream.GP)) {
-			props.add(new Property("gp", 0));
-		}
-		if (axisList.contains(AxisStream.SAP)) {
-			props.add(new Property("sap", 0));
-		}
-		if (axisList.contains(AxisStream.WP)) {
-			props.add(new Property("wp", 0));
-		}
-		return new State("Idle", props);
-	}
 }
