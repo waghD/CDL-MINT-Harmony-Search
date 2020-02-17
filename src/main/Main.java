@@ -35,8 +35,8 @@ public class Main {
 	private static final boolean PRINT_MEMORY_SWAPS = false;
 
 	public static void main(String[] args) {
-		setUpDatabase("./lib/Daten_12_156.csv", false, 0);
-		Evaluation eval = new Evaluation("./lib/realStates_12_156.csv");
+		setUpDatabase("./lib/Daten_uc2.csv", false, 0);
+		Evaluation eval = new Evaluation("./lib/realStates_uc_2.csv");
 		// SetUp all information about the states in the files
 
 		// Test
@@ -78,7 +78,7 @@ public class Main {
 
 						// number of iterations for average calculation
 						for (int i = 0; i < 1; i++) {
-							resultList.add(runHarmonySearch(hpa, 300, true, statesToNotEvaluateList, 0, 0.4));
+							resultList.add(runHarmonySearch(hpa, 500, false, statesToNotEvaluateList, 0, 0.4));
 						}
 
 						List<Integer> iterationsList = new ArrayList<Integer>();
