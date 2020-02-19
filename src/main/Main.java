@@ -36,7 +36,7 @@ public class Main {
 
 	public static void main(String[] args) {
 		setUpDatabase("./lib/Daten_uc2.csv", false, 0);
-		Evaluation eval = new Evaluation("./lib/realstates_uc_2.csv");
+		Evaluation eval = new Evaluation("./lib/realStates_uc_2.csv");
 		// SetUp all information about the states in the files
 
 		// Test
@@ -46,10 +46,10 @@ public class Main {
 		eval.setUpRealDataStream(axisList);
 
 		PrintStream out = null;
-		List<Double> accList = new ArrayList<Double>(Arrays.asList(0.8));
-		List<Double> adjList = new ArrayList<Double>(Arrays.asList(0.4));
-		List<Integer> sizeList = new ArrayList<Integer>(Arrays.asList(50));
-		List<Double> bandwidthList = new ArrayList<Double>(Arrays.asList(0.05));
+		List<Double> accList = new ArrayList<Double>(Arrays.asList(0.9));
+		List<Double> adjList = new ArrayList<Double>(Arrays.asList(0.5));
+		List<Integer> sizeList = new ArrayList<Integer>(Arrays.asList(10));
+		List<Double> bandwidthList = new ArrayList<Double>(Arrays.asList(0.04));
 		DecimalFormat df = new DecimalFormat("#.###");
 		df.setRoundingMode(RoundingMode.CEILING);
 
@@ -57,7 +57,6 @@ public class Main {
 			for (double adj : adjList) {
 				for (int size : sizeList) {
 					for (double bandwidth : bandwidthList) {
-						System.out.format("Setting: Acc:%.2f Adj:%.2f size:%d band:%.3f", acc, adj, size, bandwidth);
 						/*
 						 * try { out = new PrintStream(new FileOutputStream("output/156/rAccept_" +
 						 * String.valueOf(acc) + "_band_0.1_rAdj_" + String.valueOf(adj) + "_memSize_" +
@@ -67,8 +66,8 @@ public class Main {
 
 						// states NOT to use for evaluation
 						// Set empty array to use all states!
-						//List<String> statesToNotEvaluateList = new ArrayList<String>(Arrays.asList("Lift", "Park", "HalfRelease", "FullRelease", "Retrieve", "RetrieveGrip", "DepositRed", "ReleaseRed", "Wait", "Idle"));
-						List<String> statesToNotEvaluateList = new ArrayList<String>(Arrays.asList("Start","DriveDown","PickUp","Release", "Idle", "Lift", "Forwarding"));
+						//List<String> statesToNotEvaluateList = new ArrayList<String>(Arrays.asList("DriveDown", "PickUp", "DepositGreen", "Lift", "Park", "HalfRelease", "FullRelease", "Retrieve", "RetrieveGrip", "ReleaseRed", "Wait", "Idle"));
+						List<String> statesToNotEvaluateList = new ArrayList<String>(Arrays.asList());
 						List<HarmonyResult> resultList = new ArrayList<HarmonyResult>();
 
 						HarmonyParameters hpa = new HarmonyParameters(adj, bandwidth, acc, size, axisList);
@@ -78,34 +77,47 @@ public class Main {
 
 						// number of iterations for average calculation
 						for (int i = 0; i < 1; i++) {
-							resultList.add(runHarmonySearch(hpa, 3000, false, statesToNotEvaluateList, 0, 0.4));
+							resultList.add(runHarmonySearch(hpa, 400, false, statesToNotEvaluateList, 0, 0.4));
 						}
 
 						List<Integer> iterationsList = new ArrayList<Integer>();
 						List<Double> timeTilOptList = new ArrayList<Double>();
 						List<Double> avgPrecisionList = new ArrayList<Double>();
 						List<Double> avgRecallList = new ArrayList<Double>();
+						List<Double> avgFMeasureList = new ArrayList<Double>();
+						List<Double> timeOverallList = new ArrayList<Double>();
 
+
+						int repetition = 0;
 						for (HarmonyResult res : resultList) {
 							// System.out.println("Iterations: " + res.getNrOfIterationsForOptimum() + " ("
 							// + res.getRuntimeTilOptimumFound() + "s)" );
-							System.out.println("Iterations: " + res.getNrOfIterationsForOptimum() + " ("
+							System.out.println("Iterations (Exec. " + repetition + "): " + res.getNrOfIterationsForOptimum() + " ("
 									+ res.getRuntimeTilOptimumFound() + "s)");
 							iterationsList.add(res.getNrOfIterationsForOptimum());
 							timeTilOptList.add(res.getRuntimeTilOptimumFound());
 							avgPrecisionList.add(res.getAvgBestPrecision());
 							avgRecallList.add(res.getAvgBestRecall());
+							avgFMeasureList.add(res.getAvgBestFMeasure());
+							timeOverallList.add(res.getRuntimeIterations());
+							repetition++;
 						}
 
 						System.out.println(Printer.div);
+						Printer.printHeader("After all repetitions:");
 						double avgIterations = iterationsList.stream().mapToInt(x -> x).average().orElse(-1);
 						double avgTimeTilOpt = timeTilOptList.stream().mapToDouble(x -> x).average().orElse(-1);
+						double avgTimeOverall = timeOverallList.stream().mapToDouble(x -> x).average().orElse(-1);
 						double avgPrec = avgPrecisionList.stream().mapToDouble(x -> x).average().orElse(-1);
 						double avgRec = avgRecallList.stream().mapToDouble(x -> x).average().orElse(-1);
+						double avgFMeasure = avgFMeasureList.stream().mapToDouble(x -> x).average().orElse(-1);
+
 						System.out.println("Iterations (avg): " + avgIterations);
 						System.out.println("Time til Best found (avg): " + avgTimeTilOpt);
+						System.out.println("Time overall (avg): " + avgTimeOverall);
 						System.out.println("Avg Precision: " + avgPrec);
 						System.out.println("Avg Recall: " + avgRec);
+						System.out.println("Avg F-measure: " + avgFMeasure);
 
 						/*
 						 * out.close(); File theFile = new File("output/156/rAccept_" +
@@ -119,7 +131,90 @@ public class Main {
 				}
 			}
 		}
-
+//
+//		accList = new ArrayList<Double>(Arrays.asList(0.0));
+//		adjList = new ArrayList<Double>(Arrays.asList(0.5));
+//		sizeList = new ArrayList<Integer>(Arrays.asList(1));
+//		bandwidthList = new ArrayList<Double>(Arrays.asList(0.04));
+//		df.setRoundingMode(RoundingMode.CEILING);
+//		for (double acc : accList) {
+//			for (double adj : adjList) {
+//				for (int size : sizeList) {
+//					for (double bandwidth : bandwidthList) {
+//						/*
+//						 * try { out = new PrintStream(new FileOutputStream("output/156/rAccept_" +
+//						 * String.valueOf(acc) + "_band_0.1_rAdj_" + String.valueOf(adj) + "_memSize_" +
+//						 * String.valueOf(size) + ".txt", true), true); System.setOut(out); } catch
+//						 * (IOException e) { // TODO Auto-generated catch block e.printStackTrace(); }
+//						 */
+//
+//						// states NOT to use for evaluation
+//						// Set empty array to use all states!
+//						//List<String> statesToNotEvaluateList = new ArrayList<String>(Arrays.asList("Lift", "Park", "HalfRelease", "FullRelease", "Retrieve", "RetrieveGrip", "DepositRed", "ReleaseRed", "Wait", "Idle"));
+//						List<String> statesToNotEvaluateList = new ArrayList<String>(Arrays.asList());
+//						List<HarmonyResult> resultList = new ArrayList<HarmonyResult>();
+//
+//						HarmonyParameters hpa = new HarmonyParameters(adj, bandwidth, acc, size, axisList);
+//
+//						Printer.printHeader("Harmony parameters:");
+//						System.out.println(hpa);
+//
+//						// number of iterations for average calculation
+//						for (int i = 0; i < 20; i++) {
+//							resultList.add(runHarmonySearch(hpa, 20000, false, statesToNotEvaluateList, 0, 0.4));
+//						}
+//
+//						List<Integer> iterationsList = new ArrayList<Integer>();
+//						List<Double> timeTilOptList = new ArrayList<Double>();
+//						List<Double> avgPrecisionList = new ArrayList<Double>();
+//						List<Double> avgRecallList = new ArrayList<Double>();
+//						List<Double> avgFMeasureList = new ArrayList<Double>();
+//						List<Double> timeOverallList = new ArrayList<Double>();
+//
+//
+//						int repetition = 0;
+//						for (HarmonyResult res : resultList) {
+//							// System.out.println("Iterations: " + res.getNrOfIterationsForOptimum() + " ("
+//							// + res.getRuntimeTilOptimumFound() + "s)" );
+//							System.out.println("Iterations (Exec. " + repetition + "): " + res.getNrOfIterationsForOptimum() + " ("
+//									+ res.getRuntimeTilOptimumFound() + "s)");
+//							iterationsList.add(res.getNrOfIterationsForOptimum());
+//							timeTilOptList.add(res.getRuntimeTilOptimumFound());
+//							avgPrecisionList.add(res.getAvgBestPrecision());
+//							avgRecallList.add(res.getAvgBestRecall());
+//							avgFMeasureList.add(res.getAvgBestFMeasure());
+//							timeOverallList.add(res.getRuntimeIterations());
+//							repetition++;
+//						}
+//
+//						System.out.println(Printer.div);
+//						Printer.printHeader("After all repetitions:");
+//						double avgIterations = iterationsList.stream().mapToInt(x -> x).average().orElse(-1);
+//						double avgTimeTilOpt = timeTilOptList.stream().mapToDouble(x -> x).average().orElse(-1);
+//						double avgTimeOverall = timeOverallList.stream().mapToDouble(x -> x).average().orElse(-1);
+//						double avgPrec = avgPrecisionList.stream().mapToDouble(x -> x).average().orElse(-1);
+//						double avgRec = avgRecallList.stream().mapToDouble(x -> x).average().orElse(-1);
+//						double avgFMeasure = avgFMeasureList.stream().mapToDouble(x -> x).average().orElse(-1);
+//
+//						System.out.println("Iterations (avg): " + avgIterations);
+//						System.out.println("Time til Best found (avg): " + avgTimeTilOpt);
+//						System.out.println("Time overall (avg): " + avgTimeOverall);
+//						System.out.println("Avg Precision: " + avgPrec);
+//						System.out.println("Avg Recall: " + avgRec);
+//						System.out.println("Avg F-measure: " + avgFMeasure);
+//
+//						/*
+//						 * out.close(); File theFile = new File("output/156/rAccept_" +
+//						 * String.valueOf(acc) + "_band_0.1_rAdj_" + String.valueOf(adj) + "_memSize_" +
+//						 * String.valueOf(size) + ".txt"); theFile.renameTo(new
+//						 * File("output/156/rAccept_" + String.valueOf(acc) + "_band_0.1_rAdj_" +
+//						 * String.valueOf(adj) + "_memSize_" + String.valueOf(size) + "__avgTime_" +
+//						 * df.format(avgTimeTilOpt) + "_avgIter_" + avgIterations + ".txt"));
+//						 */// HarmonyResult hr = runHarmonySearch(hpa, 100, false, statesToEvaluateList);
+//					}
+//				}
+//			}
+//		}
 	}
 
 	/**

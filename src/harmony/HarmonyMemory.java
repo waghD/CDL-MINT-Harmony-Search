@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Random;
 
 import design.Property;
@@ -21,6 +22,8 @@ public class HarmonyMemory {
 
 	private List<Map<String, PropertyBoundaries>> solutions;
 	private List<EvaluationResult>[] fitness;
+	private double[] overallOffsets;
+
 	private List<AxisStream> axisStream;
 
 	HarmonyMemory(List<Map<String, PropertyBoundaries>> initialMemory, List<EvaluationResult>[] initialFitness, List<AxisStream> axisStream) {
@@ -36,11 +39,16 @@ public class HarmonyMemory {
 		axisStream = params.getAxisStreams();
 		solutions = this.generateDefaultMemory(axisStream, params.getMemorySize(), spaceMin, spaceMax);
 		Evaluation eval = Evaluation.instance;
-
+		overallOffsets = new double[params.getMemorySize()];
 		fitness = new List[params.getMemorySize()];
 		int count = 0;
 		for (Map<String, PropertyBoundaries> solution : solutions) {
 			fitness[count] = eval.evaluate(TestData.setUpDataStream(axisStream), solution, false, statesToEvaluateList);
+			double curOverallOffset = 0;
+			for (Entry<String, PropertyBoundaries> pair : solution.entrySet()) {
+			    curOverallOffset += pair.getValue().getLower() + pair.getValue().getUpper();
+			}
+			overallOffsets[count] = curOverallOffset;
 			count++;
 		}
 	}
@@ -75,10 +83,16 @@ public class HarmonyMemory {
 
 		int worstResultIdx = findWorstEvalResult();
 		List<EvaluationResult> worstResult = this.fitness[worstResultIdx];
-
+		double worstSolutionOffset = this.overallOffsets[worstResultIdx];
+		
 		List<EvaluationResult> newResult = eval.evaluate(TestData.setUpDataStream(this.axisStream), newSolution, false, statesToEvaluateList);
 
-		if (cmpListEvalResults(newResult, worstResult) > 0) {
+		double newSolutionOffset = 0;
+		for (Entry<String, PropertyBoundaries> pair : newSolution.entrySet()) {
+			newSolutionOffset += pair.getValue().getLower() + pair.getValue().getUpper();
+		}
+		
+		if (cmpListEvalResults(newResult, newSolutionOffset, worstResult, worstSolutionOffset, false) > 0) {
 			if (printMemorySwaps) {
 				Printer.printHeader("SWAP: Solution " + (worstResultIdx + 1) + " (worst) -> New solution");
 				Map<String, PropertyBoundaries> worstSolution = solutions.get(worstResultIdx);
@@ -94,6 +108,8 @@ public class HarmonyMemory {
 			}
 			solutions.set(worstResultIdx, newSolution);
 			fitness[worstResultIdx] = newResult;
+			overallOffsets[worstResultIdx] = newSolutionOffset;
+			
 			foundOptimum = true;
 			for (int i = 0; i < newResult.size(); i++) {
 				EvaluationResult stateResult = newResult.get(i);
@@ -111,6 +127,20 @@ public class HarmonyMemory {
 		Map<String, PropertyBoundaries> bestSolution = this.solutions.get(bestIndex);
 		return bestSolution.equals(testSolution);
 	}
+	
+	
+	
+	public double getBestAvgFMeasure() {
+		int bestIndex = this.findBestEvalResult();
+		List<EvaluationResult> best = this.fitness[bestIndex];
+		double fMeasure = 0.0;
+		for (EvaluationResult evalResult : best) {
+			fMeasure += evalResult.getfMeasure();
+		}
+		fMeasure /= best.size();
+		return fMeasure;
+	}
+	
 	
 	public double getBestAvgPrecision() {
 		int bestIndex = this.findBestEvalResult();
@@ -146,8 +176,9 @@ public class HarmonyMemory {
 		int worstIndex = 0;
 		int index = 0;
 		List<EvaluationResult> worstEvalResult = this.fitness[0];
+		double worstSolOffset = this.overallOffsets[0];
 		for (List<EvaluationResult> evalResultList : this.fitness) {
-			if (cmpListEvalResults(worstEvalResult, evalResultList) > 0) {
+			if (cmpListEvalResults(worstEvalResult, worstSolOffset, evalResultList, this.overallOffsets[index], false) > 0) {
 				worstEvalResult = evalResultList;
 				worstIndex = index;
 			}
@@ -168,8 +199,9 @@ public class HarmonyMemory {
 		int bestIndex = 0;
 		int index = 0;
 		List<EvaluationResult> bestEvalResult = this.fitness[0];
+		double bestSolOffset = this.overallOffsets[0];
 		for (List<EvaluationResult> evalResultList : this.fitness) {
-			if (cmpListEvalResults(evalResultList, bestEvalResult) > 0) {
+			if (cmpListEvalResults(evalResultList, bestSolOffset, bestEvalResult, this.overallOffsets[index], false) > 0) {
 				bestEvalResult = evalResultList;
 				bestIndex = index;
 			}
@@ -190,7 +222,7 @@ public class HarmonyMemory {
 	 * @return 1 if evalList1 carries better results, -1 if evalList2 carries better
 	 *         results, 0 if results (precision and recall) are equal in both lists
 	 */
-	private int cmpListEvalResults(List<EvaluationResult> evalList1, List<EvaluationResult> evalList2) {
+	private int cmpListEvalResults(List<EvaluationResult> evalList1, double solOffset1, List<EvaluationResult> evalList2, double solOffset2, boolean print) {
 		double avgPrecisionList1 = 0;
 		double avgPrecisionList2 = 0;
 		double avgRecallList1 = 0;
@@ -210,9 +242,16 @@ public class HarmonyMemory {
 		avgRecallList2 /= evalList2.size();
 
 		if ((avgPrecisionList1 + avgRecallList1) > (avgPrecisionList2 + avgRecallList2)) {
+			if(print)System.out.format("Swapped for better precision/recall! (%.4f > %.4f)\n", avgPrecisionList1+avgRecallList1, avgPrecisionList2+avgRecallList2);
+
 			return 1;
 		} else if ((avgPrecisionList1 + avgRecallList1) == (avgPrecisionList2 + avgRecallList2)) {
-			return 0;
+			if(solOffset1 < solOffset2) {
+				if(print)System.out.format("Swapped for narrower range! (%.4f < %.4f)\n", solOffset1, solOffset2);
+				return 1;
+			} else {
+				return 0;
+			}
 		} else {
 			return -1;
 		}
@@ -298,7 +337,7 @@ public class HarmonyMemory {
 				fmeasureList.add(solEvalResult.getfMeasure());
 				
 			}
-			System.out.printf("\n\nf-measure: %.3f\n\n", fmeasureList.stream().mapToDouble(x -> x).average().orElse(-1));
+			System.out.printf("\n\nf-measure: %.4f\nAbs. Offset Value: %.4f\n", fmeasureList.stream().mapToDouble(x -> x).average().orElse(-1), this.overallOffsets[idx]);
 	
 	}
 

@@ -113,6 +113,7 @@ public class HarmonySearch {
 				hs.setOptimumFound(foundOptimum);
 				hs.setAvgBestPrecision(harmonyMemory.getBestAvgPrecision());
 				hs.setAvgBestRecall(harmonyMemory.getBestAvgRecall());
+				hs.setAvgBestFMeasure(harmonyMemory.getBestAvgFMeasure());
 				if (stopIfOptimumFound) {
 					break;
 				}

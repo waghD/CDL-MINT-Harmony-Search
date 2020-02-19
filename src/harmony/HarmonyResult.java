@@ -7,13 +7,30 @@ public class HarmonyResult {
 	private double runtimeTilOptimumFound = 0;
 	private double avgBestPrecision = 0;
 	private double avgBestRecall = 0;
+	private double avgBestFMeasure = 0;
+	private double absoluteOffset = 0;
 	
+	public double getAbsoluteOffset() {
+		return absoluteOffset;
+	}
+	
+	public void setAbsoluteOffset(double offset) {
+		this.absoluteOffset = offset;
+	}
 	public double getAvgBestPrecision() {
 		return avgBestPrecision;
 	}
 	
 	public void setAvgBestPrecision(double prec) {
 		this.avgBestPrecision = prec;
+	}
+	
+	public double getAvgBestFMeasure() {
+		return avgBestFMeasure;
+	}
+	
+	public void setAvgBestFMeasure(double fMeasure) {
+		this.avgBestFMeasure = fMeasure;
 	}
 	
 	public double getAvgBestRecall() {

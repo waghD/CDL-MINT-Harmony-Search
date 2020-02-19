@@ -151,11 +151,9 @@
             property="//@block.0/@property.0"
             value="3.142"/>
         <assignment
-            property="//@block.0/@property.1"
-            value="1.36"/>
+            property="//@block.0/@property.1"/>
         <assignment
-            property="//@block.0/@property.3"
-            value="-1.334"/>
+            property="//@block.0/@property.3"/>
         <assignment
             property="//@block.0/@property.4"
             value="-1.5"/>
@@ -209,7 +207,7 @@
             value="-0.4"/>
         <assignment
             property="//@block.0/@property.0"
-            value="1.449"/>
+            value="-1.449"/>
         <assignment
             property="//@block.0/@property.1"
             value="0.942"/>
@@ -229,7 +227,7 @@
             value="0.5"/>
         <assignment
             property="//@block.0/@property.0"
-            value="1.449"/>
+            value="-1.449"/>
         <assignment
             property="//@block.0/@property.1"
             value="0.942"/>
@@ -249,7 +247,7 @@
             value="-0.4"/>
         <assignment
             property="//@block.0/@property.0"
-            value="1.745"/>
+            value="-1.745"/>
         <assignment
             property="//@block.0/@property.1"
             value="0.942"/>
@@ -269,7 +267,7 @@
             value="0.5"/>
         <assignment
             property="//@block.0/@property.0"
-            value="1.745"/>
+            value="-1.745"/>
         <assignment
             property="//@block.0/@property.1"
             value="0.942"/>

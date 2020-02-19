@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 
 import main.AxisStream;
-import main.StreamCount;
 
 public class HarmonyParameters {
 
@@ -74,7 +73,7 @@ public class HarmonyParameters {
 
 	public String toString() {
 		return String.format("Acceptance rate (r_accept): %.2f\nParameter Adjustment Rate (r_pa): %.2f\n" +
-				"bandwith (band) = %.2f\n" +
+				"bandwith (band) = %.5f\n" +
 				"Memory size (solutions) = %d", this.r_accept, this.r_pa, this.band, memorySize);
 	}
 

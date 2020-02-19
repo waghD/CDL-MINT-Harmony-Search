@@ -155,6 +155,8 @@ public class Evaluation {
 		for (IdentifiedState s : recognizedStates) {
 			if (statesReal.get(statename).contains(s)) {
 				intersection++;
+			} else {
+
 			}
 			if (s.getTimestamp().equals("")) {
 				noMatch = true;
