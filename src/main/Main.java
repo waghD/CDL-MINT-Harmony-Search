@@ -7,9 +7,11 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.math.RoundingMode;
+import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -36,7 +38,7 @@ public class Main {
 
 	public static void main(String[] args) {
 		setUpDatabase("./lib/Daten_uc2.csv", false, 0);
-		Evaluation eval = new Evaluation("./lib/realStates_uc_2.csv");
+		Evaluation eval = new Evaluation("./lib/realstates_uc_2.csv");
 		// SetUp all information about the states in the files
 
 		// Test
@@ -67,7 +69,9 @@ public class Main {
 						// states NOT to use for evaluation
 						// Set empty array to use all states!
 						//List<String> statesToNotEvaluateList = new ArrayList<String>(Arrays.asList("DriveDown", "PickUp", "DepositGreen", "Lift", "Park", "HalfRelease", "FullRelease", "Retrieve", "RetrieveGrip", "ReleaseRed", "Wait", "Idle"));
-						List<String> statesToNotEvaluateList = new ArrayList<String>(Arrays.asList());
+						//List<String> statesToNotEvaluateList = new ArrayList<String>(Arrays.asList("Adjust", "DriveDown", "PickUp", "Forwarding", "Start", "Idle", "Lift"));
+						
+						List<String> statesToNotEvaluateList = new ArrayList<String>();
 						List<HarmonyResult> resultList = new ArrayList<HarmonyResult>();
 
 						HarmonyParameters hpa = new HarmonyParameters(adj, bandwidth, acc, size, axisList);
@@ -77,7 +81,7 @@ public class Main {
 
 						// number of iterations for average calculation
 						for (int i = 0; i < 1; i++) {
-							resultList.add(runHarmonySearch(hpa, 400, false, statesToNotEvaluateList, 0, 0.4));
+							resultList.add(runHarmonySearch(hpa, 5000, false, statesToNotEvaluateList, 0, 0.4));
 						}
 
 						List<Integer> iterationsList = new ArrayList<Integer>();
@@ -131,7 +135,7 @@ public class Main {
 				}
 			}
 		}
-//
+
 //		accList = new ArrayList<Double>(Arrays.asList(0.0));
 //		adjList = new ArrayList<Double>(Arrays.asList(0.5));
 //		sizeList = new ArrayList<Integer>(Arrays.asList(1));
@@ -215,6 +219,8 @@ public class Main {
 //				}
 //			}
 //		}
+//        Date date = new Date();
+//        System.out.println(new Timestamp(date.getTime()));
 	}
 
 	/**

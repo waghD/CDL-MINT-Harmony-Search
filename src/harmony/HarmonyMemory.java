@@ -279,7 +279,7 @@ public class HarmonyMemory {
 			Map<String, PropertyBoundaries> curMap = solutions.get(i);
 			Iterator<Map.Entry<String, PropertyBoundaries>> it = curMap.entrySet().iterator();
 			System.out.println(Printer.div + "\nSolution " + (i + 1) + " in memory\n" + Printer.div);
-			curMap.forEach((propertyName, boundaries) -> System.out.printf("%s: %.3f, %.3f\n", propertyName,
+			curMap.forEach((propertyName, boundaries) -> System.out.printf("%s: %.7f, %.7f\n", propertyName,
 					boundaries.getLower(), boundaries.getUpper()));
 
 			List<EvaluationResult> solutionEvalResults = fitness[i];
@@ -301,7 +301,7 @@ public class HarmonyMemory {
 			Map<String, PropertyBoundaries> curMap = solutions.get(i);
 			Iterator<Map.Entry<String, PropertyBoundaries>> it = curMap.entrySet().iterator();
 			System.out.println(Printer.div + "\nSolution " + (i + 1) + " in memory\n" + Printer.div);
-			curMap.forEach((propertyName, boundaries) -> System.out.printf("%s: %.3f, %.3f\n", propertyName,
+			curMap.forEach((propertyName, boundaries) -> System.out.printf("%s: %.7f, %.7f\n", propertyName,
 					boundaries.getLower(), boundaries.getUpper()));
 
 			List<EvaluationResult> solutionEvalResults = fitness[i];
@@ -326,7 +326,7 @@ public class HarmonyMemory {
 			Map<String, PropertyBoundaries> curMap = solutions.get(idx);
 			Iterator<Map.Entry<String, PropertyBoundaries>> it = curMap.entrySet().iterator();
 			System.out.println(Printer.div + "\nSolution " + (idx + 1) + " in memory\n" + Printer.div);
-			curMap.forEach((propertyName, boundaries) -> System.out.printf("%s: %.3f, %.3f\n", propertyName,
+			curMap.forEach((propertyName, boundaries) -> System.out.printf("%s: %.4f, %.4f\n", propertyName,
 					boundaries.getLower(), boundaries.getUpper()));
 
 			List<EvaluationResult> solutionEvalResults = fitness[idx];
@@ -337,7 +337,7 @@ public class HarmonyMemory {
 				fmeasureList.add(solEvalResult.getfMeasure());
 				
 			}
-			System.out.printf("\n\nf-measure: %.4f\nAbs. Offset Value: %.4f\n", fmeasureList.stream().mapToDouble(x -> x).average().orElse(-1), this.overallOffsets[idx]);
+			System.out.printf("\n\nf-measure: %.3f\nAbs. Offset Value: %.3f\n", fmeasureList.stream().mapToDouble(x -> x).average().orElse(-1), this.overallOffsets[idx]);
 	
 	}
 

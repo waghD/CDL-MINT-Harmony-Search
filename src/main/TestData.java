@@ -68,6 +68,20 @@ public class TestData {
 							 	 if(valString.length() > 0) {
 							 		val = Double.parseDouble(valString);
 							 	 }
+//									switch(this) {
+//									case BP:
+//										return 2;
+//									case MAP:
+//										return 3;
+//									case SAP:
+//										return 4;
+//									case WP:
+//										return 5;
+//									case GP:
+//										return 6;
+//									default:
+//										return 0;
+//									}
 							 	 String propName = assignmentElement.getAttribute("property");
 								 switch(propName) {
 								 	case "//@block.0/@property.0":
