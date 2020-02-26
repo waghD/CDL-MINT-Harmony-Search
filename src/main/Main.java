@@ -37,8 +37,8 @@ public class Main {
 	private static final boolean PRINT_MEMORY_SWAPS = false;
 
 	public static void main(String[] args) {
-		setUpDatabase("./lib/Daten_uc2.csv", false, 0);
-		Evaluation eval = new Evaluation("./lib/realstates_uc_2.csv");
+		setUpDatabase("./lib/Daten_1560.csv", false, 0);
+		Evaluation eval = new Evaluation("./lib/realStates_1560.csv");
 		// SetUp all information about the states in the files
 
 		// Test
@@ -59,12 +59,12 @@ public class Main {
 			for (double adj : adjList) {
 				for (int size : sizeList) {
 					for (double bandwidth : bandwidthList) {
-						/*
-						 * try { out = new PrintStream(new FileOutputStream("output/156/rAccept_" +
-						 * String.valueOf(acc) + "_band_0.1_rAdj_" + String.valueOf(adj) + "_memSize_" +
-						 * String.valueOf(size) + ".txt", true), true); System.setOut(out); } catch
-						 * (IOException e) { // TODO Auto-generated catch block e.printStackTrace(); }
-						 */
+						
+						  try { out = new PrintStream(new FileOutputStream("out_notNarrowed_10k_1560.txt", true), true); System.setOut(out); } catch
+						  (IOException e) { // TODO Auto-generated catch block e.printStackTrace(); 
+							  }
+						  
+						 
 
 						// states NOT to use for evaluation
 						// Set empty array to use all states!
@@ -81,7 +81,8 @@ public class Main {
 
 						// number of iterations for average calculation
 						for (int i = 0; i < 1; i++) {
-							resultList.add(runHarmonySearch(hpa, 5000, false, statesToNotEvaluateList, 0, 0.4));
+							resultList.add(runHarmonySearch(hpa, 10000, false, statesToNotEvaluateList, 0, 0.4, false));
+							
 						}
 
 						List<Integer> iterationsList = new ArrayList<Integer>();
@@ -123,9 +124,9 @@ public class Main {
 						System.out.println("Avg Recall: " + avgRec);
 						System.out.println("Avg F-measure: " + avgFMeasure);
 
-						/*
-						 * out.close(); File theFile = new File("output/156/rAccept_" +
-						 * String.valueOf(acc) + "_band_0.1_rAdj_" + String.valueOf(adj) + "_memSize_" +
+						
+						 out.close(); //File theFile = new File("output/156/rAccept_" +
+						 /* String.valueOf(acc) + "_band_0.1_rAdj_" + String.valueOf(adj) + "_memSize_" +
 						 * String.valueOf(size) + ".txt"); theFile.renameTo(new
 						 * File("output/156/rAccept_" + String.valueOf(acc) + "_band_0.1_rAdj_" +
 						 * String.valueOf(adj) + "_memSize_" + String.valueOf(size) + "__avgTime_" +
@@ -240,7 +241,7 @@ public class Main {
 	 * @return HarmonyResult
 	 */
 	static HarmonyResult runHarmonySearch(HarmonyParameters hpa, int nrOfIterations, boolean stopIfOptimumFound,
-			List<String> statesToEvaluateList, double spaceMin, double spaceMax) {
+			List<String> statesToEvaluateList, double spaceMin, double spaceMax, boolean minimizeBandwidth) {
 		// Initialize HarmonyMemory with HarmonyParameters
 		HarmonyMemory memory = new HarmonyMemory(hpa, statesToEvaluateList, spaceMin, spaceMax);
 
@@ -252,7 +253,7 @@ public class Main {
 		// Execute harmony search: If parameter "stopIfOptimumFound" is true,
 		// max number of iterations is still respected (here: max 300 iterations)
 		HarmonyResult hs = search.execHarmonySearch(nrOfIterations, stopIfOptimumFound, statesToEvaluateList,
-				PRINT_NEW_SOLUTIONS, PRINT_MEMORY_SWAPS);
+				PRINT_NEW_SOLUTIONS, PRINT_MEMORY_SWAPS, minimizeBandwidth);
 
 		//Printer.printHeader("MEMORY RESULTS");
 		//memory.print();
@@ -261,7 +262,7 @@ public class Main {
 
 		System.out.println(hs);
 		Printer.printHeader("BEST");
-		memory.print(memory.findBestEvalResult());
+		memory.print(memory.findBestEvalResult(minimizeBandwidth));
 
 		return hs;
 	}

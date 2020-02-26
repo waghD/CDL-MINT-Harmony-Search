@@ -51,7 +51,7 @@ public class HarmonySearch {
 	 *         was found
 	 */
 	public HarmonyResult execHarmonySearch(int nrOfIter, boolean stopIfOptimumFound, List<String> statesToEvaluateList,
-			boolean printNewSolutions, boolean printMemorySwaps) {
+			boolean printNewSolutions, boolean printMemorySwaps, boolean minimizeBandwidth) {
 		Random rand = new Random();
 		HarmonyResult hs = new HarmonyResult();
 
@@ -104,20 +104,21 @@ public class HarmonySearch {
 
 			}
 
-			boolean foundOptimum = harmonyMemory.evalSolution(newSolution, printMemorySwaps, statesToEvaluateList);
-			boolean isBest = harmonyMemory.isSolutionBest(newSolution);
+			boolean foundOptimum = harmonyMemory.evalSolution(newSolution, printMemorySwaps, statesToEvaluateList, minimizeBandwidth);
+			boolean isBest = harmonyMemory.isSolutionBest(newSolution, minimizeBandwidth);
 			// only remember iteration where FIRST optimum was found
 			if (foundOptimum || isBest) {
 				hs.setRuntimeTilOptimumFound((System.currentTimeMillis() - startIterTime) / 1000.0);
 				hs.setNrOfIterationsForOptimum(i + 1);
 				hs.setOptimumFound(foundOptimum);
-				hs.setAvgBestPrecision(harmonyMemory.getBestAvgPrecision());
-				hs.setAvgBestRecall(harmonyMemory.getBestAvgRecall());
-				hs.setAvgBestFMeasure(harmonyMemory.getBestAvgFMeasure());
+				hs.setAvgBestPrecision(harmonyMemory.getBestAvgPrecision(minimizeBandwidth));
+				hs.setAvgBestRecall(harmonyMemory.getBestAvgRecall(minimizeBandwidth));
+				hs.setAvgBestFMeasure(harmonyMemory.getBestAvgFMeasure(minimizeBandwidth));
 				if (stopIfOptimumFound) {
 					break;
 				}
 			}
+			System.out.println(i+1 + ";" + harmonyMemory.getBestAvgFMeasure(minimizeBandwidth) + ";" + harmonyMemory.getBestAbsOffset(minimizeBandwidth));
 		}
 		hs.setRuntimeIterations((System.currentTimeMillis() - startIterTime) / 1000.0);
 		return hs;

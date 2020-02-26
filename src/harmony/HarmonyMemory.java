@@ -76,12 +76,12 @@ public class HarmonyMemory {
 	 * @return boolean .. true when optimal solution (precision and recall both =
 	 *         1.0) found
 	 */
-	public boolean evalSolution(Map<String, PropertyBoundaries> newSolution, boolean printMemorySwaps, List<String> statesToEvaluateList) {
+	public boolean evalSolution(Map<String, PropertyBoundaries> newSolution, boolean printMemorySwaps, List<String> statesToEvaluateList, boolean minimizeBandwidth) {
 
 		boolean foundOptimum = false;
 		Evaluation eval = Evaluation.instance;
 
-		int worstResultIdx = findWorstEvalResult();
+		int worstResultIdx = findWorstEvalResult(minimizeBandwidth);
 		List<EvaluationResult> worstResult = this.fitness[worstResultIdx];
 		double worstSolutionOffset = this.overallOffsets[worstResultIdx];
 		
@@ -92,7 +92,7 @@ public class HarmonyMemory {
 			newSolutionOffset += pair.getValue().getLower() + pair.getValue().getUpper();
 		}
 		
-		if (cmpListEvalResults(newResult, newSolutionOffset, worstResult, worstSolutionOffset, false) > 0) {
+		if (cmpListEvalResults(newResult, newSolutionOffset, worstResult, worstSolutionOffset, false, minimizeBandwidth) > 0) {
 			if (printMemorySwaps) {
 				Printer.printHeader("SWAP: Solution " + (worstResultIdx + 1) + " (worst) -> New solution");
 				Map<String, PropertyBoundaries> worstSolution = solutions.get(worstResultIdx);
@@ -122,16 +122,16 @@ public class HarmonyMemory {
 		return foundOptimum;
 	}
 	
-	public boolean isSolutionBest(Map<String, PropertyBoundaries> testSolution) {
-		int bestIndex = this.findBestEvalResult();
+	public boolean isSolutionBest(Map<String, PropertyBoundaries> testSolution, boolean minimizeBandwidth) {
+		int bestIndex = this.findBestEvalResult(minimizeBandwidth);
 		Map<String, PropertyBoundaries> bestSolution = this.solutions.get(bestIndex);
 		return bestSolution.equals(testSolution);
 	}
 	
 	
 	
-	public double getBestAvgFMeasure() {
-		int bestIndex = this.findBestEvalResult();
+	public double getBestAvgFMeasure(boolean minimizeBandwidth) {
+		int bestIndex = this.findBestEvalResult(minimizeBandwidth);
 		List<EvaluationResult> best = this.fitness[bestIndex];
 		double fMeasure = 0.0;
 		for (EvaluationResult evalResult : best) {
@@ -142,8 +142,8 @@ public class HarmonyMemory {
 	}
 	
 	
-	public double getBestAvgPrecision() {
-		int bestIndex = this.findBestEvalResult();
+	public double getBestAvgPrecision(boolean minimizeBandwidth) {
+		int bestIndex = this.findBestEvalResult(minimizeBandwidth);
 		List<EvaluationResult> best = this.fitness[bestIndex];
 		double avgPrec = 0.0;
 		for (EvaluationResult evalResult : best) {
@@ -153,8 +153,8 @@ public class HarmonyMemory {
 		return avgPrec;
 	}
 	
-	public double getBestAvgRecall() {
-		int bestIndex = this.findBestEvalResult();
+	public double getBestAvgRecall(boolean minimizeBandwidth) {
+		int bestIndex = this.findBestEvalResult(minimizeBandwidth);
 		List<EvaluationResult> best = this.fitness[bestIndex];
 		double avgRec = 0.0;
 		for (EvaluationResult evalResult : best) {
@@ -163,6 +163,12 @@ public class HarmonyMemory {
 		avgRec /= best.size();
 		return avgRec;
 	}
+	
+	public double getBestAbsOffset(boolean minimizeBandwidth) {
+		int bestIndex = this.findBestEvalResult(minimizeBandwidth);
+		return this.overallOffsets[bestIndex];
+	}
+	
 
 	/**
 	 * Determines worst result in list of solution maps.
@@ -172,13 +178,13 @@ public class HarmonyMemory {
 	 * @param evalResultListofLists
 	 * @return
 	 */
-	private int findWorstEvalResult() {
+	private int findWorstEvalResult(boolean minimizeBandwidth) {
 		int worstIndex = 0;
 		int index = 0;
 		List<EvaluationResult> worstEvalResult = this.fitness[0];
 		double worstSolOffset = this.overallOffsets[0];
 		for (List<EvaluationResult> evalResultList : this.fitness) {
-			if (cmpListEvalResults(worstEvalResult, worstSolOffset, evalResultList, this.overallOffsets[index], false) > 0) {
+			if (cmpListEvalResults(worstEvalResult, worstSolOffset, evalResultList, this.overallOffsets[index], false, minimizeBandwidth) > 0) {
 				worstEvalResult = evalResultList;
 				worstIndex = index;
 			}
@@ -195,13 +201,13 @@ public class HarmonyMemory {
 	 * @param evalResultListofLists
 	 * @return
 	 */
-	public int findBestEvalResult() {
+	public int findBestEvalResult(boolean minimizeBandwidth) {
 		int bestIndex = 0;
 		int index = 0;
 		List<EvaluationResult> bestEvalResult = this.fitness[0];
 		double bestSolOffset = this.overallOffsets[0];
 		for (List<EvaluationResult> evalResultList : this.fitness) {
-			if (cmpListEvalResults(evalResultList, bestSolOffset, bestEvalResult, this.overallOffsets[index], false) > 0) {
+			if (cmpListEvalResults(evalResultList, bestSolOffset, bestEvalResult, this.overallOffsets[index], false, minimizeBandwidth) > 0) {
 				bestEvalResult = evalResultList;
 				bestIndex = index;
 			}
@@ -222,7 +228,7 @@ public class HarmonyMemory {
 	 * @return 1 if evalList1 carries better results, -1 if evalList2 carries better
 	 *         results, 0 if results (precision and recall) are equal in both lists
 	 */
-	private int cmpListEvalResults(List<EvaluationResult> evalList1, double solOffset1, List<EvaluationResult> evalList2, double solOffset2, boolean print) {
+	private int cmpListEvalResults(List<EvaluationResult> evalList1, double solOffset1, List<EvaluationResult> evalList2, double solOffset2, boolean print, boolean minimizeBandwidth) {
 		double avgPrecisionList1 = 0;
 		double avgPrecisionList2 = 0;
 		double avgRecallList1 = 0;
@@ -240,13 +246,13 @@ public class HarmonyMemory {
 		avgRecallList1 /= evalList1.size();
 		avgPrecisionList2 /= evalList2.size();
 		avgRecallList2 /= evalList2.size();
-
+		
 		if ((avgPrecisionList1 + avgRecallList1) > (avgPrecisionList2 + avgRecallList2)) {
 			if(print)System.out.format("Swapped for better precision/recall! (%.4f > %.4f)\n", avgPrecisionList1+avgRecallList1, avgPrecisionList2+avgRecallList2);
 
 			return 1;
 		} else if ((avgPrecisionList1 + avgRecallList1) == (avgPrecisionList2 + avgRecallList2)) {
-			if(solOffset1 < solOffset2) {
+			if(minimizeBandwidth && solOffset1 < solOffset2) {
 				if(print)System.out.format("Swapped for narrower range! (%.4f < %.4f)\n", solOffset1, solOffset2);
 				return 1;
 			} else {
