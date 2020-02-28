@@ -186,6 +186,7 @@ public class HarmonyMemory {
 		for (List<EvaluationResult> evalResultList : this.fitness) {
 			if (cmpListEvalResults(worstEvalResult, worstSolOffset, evalResultList, this.overallOffsets[index], false, minimizeBandwidth) > 0) {
 				worstEvalResult = evalResultList;
+				worstSolOffset = this.overallOffsets[index];
 				worstIndex = index;
 			}
 			index++;
@@ -207,8 +208,9 @@ public class HarmonyMemory {
 		List<EvaluationResult> bestEvalResult = this.fitness[0];
 		double bestSolOffset = this.overallOffsets[0];
 		for (List<EvaluationResult> evalResultList : this.fitness) {
-			if (cmpListEvalResults(evalResultList, bestSolOffset, bestEvalResult, this.overallOffsets[index], false, minimizeBandwidth) > 0) {
+			if (cmpListEvalResults(evalResultList, this.overallOffsets[index], bestEvalResult, bestSolOffset, false, minimizeBandwidth) > 0) {
 				bestEvalResult = evalResultList;
+				bestSolOffset = this.overallOffsets[index];
 				bestIndex = index;
 			}
 			index++;

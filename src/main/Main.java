@@ -60,7 +60,7 @@ public class Main {
 				for (int size : sizeList) {
 					for (double bandwidth : bandwidthList) {
 						
-						  try { out = new PrintStream(new FileOutputStream("out_notNarrowed_10k_1560.txt", true), true); System.setOut(out); } catch
+						  try { out = new PrintStream(new FileOutputStream("out_check_fix_3.txt", true), true); System.setOut(out); } catch
 						  (IOException e) { // TODO Auto-generated catch block e.printStackTrace(); 
 							  }
 						  
@@ -81,7 +81,7 @@ public class Main {
 
 						// number of iterations for average calculation
 						for (int i = 0; i < 1; i++) {
-							resultList.add(runHarmonySearch(hpa, 10000, false, statesToNotEvaluateList, 0, 0.4, false));
+							resultList.add(runHarmonySearch(hpa, 10000, false, statesToNotEvaluateList, 0, 0.4, true));
 							
 						}
 
