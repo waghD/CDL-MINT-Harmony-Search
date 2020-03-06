@@ -84,7 +84,12 @@ public class HarmonySearch {
 								.get(curPropertyName).getAsArray()[j];
 
 						if (rand.nextDouble() < harmonyParameters.getR_pa()) {
-							solVec[j] = solVec[j] + (nextRandDoubleRandSign(0, 1) * harmonyParameters.getBand());
+							//solVec[j] = solVec[j] + (nextRandDoubleRandSign(0, 1) * harmonyParameters.getBand());
+							if (rand.nextDouble() < 0.5) {
+								solVec[j] = solVec[j] - ((solVec[j] - harmonyMemory.getMemoryMinAtPropertyAndDim(curPropertyName, j))*rand.nextDouble());
+							} else {
+								solVec[j] = solVec[j] + ((harmonyMemory.getMemoryMaxAtPropertyAndDim(curPropertyName, j) - solVec[j])*rand.nextDouble());
+							}
 						}
 					} else {
 

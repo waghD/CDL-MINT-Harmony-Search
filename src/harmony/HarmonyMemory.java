@@ -57,6 +57,29 @@ public class HarmonyMemory {
 			count++;
 		}
 	}
+	
+	
+	double getMemoryMaxAtPropertyAndDim(String property, int d) {
+		double maxAtPropDim = 0;
+		for (Map<String, PropertyBoundaries> solution : solutions) {
+			double curPropDimVal = solution.get(property).getAsArray()[d];
+			if(curPropDimVal > maxAtPropDim) {
+				maxAtPropDim = curPropDimVal;
+			}
+		}
+		return maxAtPropDim;
+	}
+	
+	double getMemoryMinAtPropertyAndDim(String property, int d) {
+		double minAtPropDim = 0;
+		for (Map<String, PropertyBoundaries> solution : solutions) {
+			double curPropDimVal = solution.get(property).getAsArray()[d];
+			if(curPropDimVal < minAtPropDim) {
+				minAtPropDim = curPropDimVal;
+			}
+		}
+		return minAtPropDim;
+	}
 
 	List<Map<String, PropertyBoundaries>> getMemory() {
 		return solutions;
