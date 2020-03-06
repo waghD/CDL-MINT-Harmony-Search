@@ -8,6 +8,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
+import main.EvaluationResult;
 import main.PropertyBoundaries;
 import output.Printer;
 
@@ -118,8 +119,11 @@ public class HarmonySearch {
 					break;
 				}
 			}
-			System.out.println(i+1 + ";" + harmonyMemory.getBestAvgFMeasure(minimizeBandwidth) + ";" + harmonyMemory.getBestAbsOffset(minimizeBandwidth));
+			System.out.println(i+1 + ";" + harmonyMemory.getBestIndex(minimizeBandwidth) + ";" + harmonyMemory.getBestAvgFMeasure(minimizeBandwidth) + ";" + harmonyMemory.getBestAbsOffset(minimizeBandwidth));
+			
+
 		}
+		
 		hs.setRuntimeIterations((System.currentTimeMillis() - startIterTime) / 1000.0);
 		return hs;
 	}

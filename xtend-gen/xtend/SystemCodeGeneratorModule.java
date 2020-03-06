@@ -9,8 +9,8 @@ import org.eclipse.xtext.resource.generic.AbstractGenericResourceRuntimeModule;
 import xtend.SystemCodeGenerator;
 
 @SuppressWarnings("all")
-public class SystemCodeGeneratorModule extends AbstractGenericResourceRuntimeModule {
-  public static class Utf8EncodingProvider implements IEncodingProvider {
+public class SystemCodeGeneratorModule /* extends AbstractGenericResourceRuntimeModule  */{
+  public static class Utf8EncodingProvider /* implements IEncodingProvider  */{
     @Override
     public String getEncoding(final URI uri) {
       return "UTF-8";

@@ -37,8 +37,8 @@ public class Main {
 	private static final boolean PRINT_MEMORY_SWAPS = false;
 
 	public static void main(String[] args) {
-		setUpDatabase("./lib/Daten_1560.csv", false, 0);
-		Evaluation eval = new Evaluation("./lib/realStates_1560.csv");
+		setUpDatabase("./lib/Daten_156.csv", false, 0);
+		Evaluation eval = new Evaluation("./lib/realStates_156.csv");
 		// SetUp all information about the states in the files
 
 		// Test
@@ -60,7 +60,7 @@ public class Main {
 				for (int size : sizeList) {
 					for (double bandwidth : bandwidthList) {
 						
-						  try { out = new PrintStream(new FileOutputStream("out_check_fix_3.txt", true), true); System.setOut(out); } catch
+						  try { out = new PrintStream(new FileOutputStream("out_2_states_156_notMinimized_0403.txt", true), true); System.setOut(out); } catch
 						  (IOException e) { // TODO Auto-generated catch block e.printStackTrace(); 
 							  }
 						  
@@ -81,7 +81,7 @@ public class Main {
 
 						// number of iterations for average calculation
 						for (int i = 0; i < 1; i++) {
-							resultList.add(runHarmonySearch(hpa, 10000, false, statesToNotEvaluateList, 0, 0.4, true));
+							resultList.add(runHarmonySearch(hpa, 10000, false, statesToNotEvaluateList, 0, 0.4, false));
 							
 						}
 

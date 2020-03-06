@@ -35,6 +35,11 @@ public class HarmonyMemory {
 	public List<Map<String, PropertyBoundaries>> getSolutions() {
 		return this.solutions;
 	}
+	
+	public List<EvaluationResult>[] getFitness() {
+		return this.fitness;
+	}
+	
 	public HarmonyMemory(HarmonyParameters params, List<String> statesToEvaluateList, double spaceMin, double spaceMax) {
 		axisStream = params.getAxisStreams();
 		solutions = this.generateDefaultMemory(axisStream, params.getMemorySize(), spaceMin, spaceMax);
@@ -94,7 +99,7 @@ public class HarmonyMemory {
 		
 		if (cmpListEvalResults(newResult, newSolutionOffset, worstResult, worstSolutionOffset, false, minimizeBandwidth) > 0) {
 			if (printMemorySwaps) {
-				Printer.printHeader("SWAP: Solution " + (worstResultIdx + 1) + " (worst) -> New solution");
+				Printer.printHeader("SWAP: Solution " + (worstResultIdx) + " (worst) -> New solution");
 				Map<String, PropertyBoundaries> worstSolution = solutions.get(worstResultIdx);
 				// Get all properties in map
 				List<String> propertyNameList = new ArrayList<>(newSolution.keySet());
@@ -104,12 +109,35 @@ public class HarmonyMemory {
 							curProperty + ": " + worstSolution.get(curProperty) + " -> " + newSolution.get(curProperty))
 							.print();
 				}
-				System.out.print("\n" + worstResult + "\n->\n" + newResult);
+				double worstFMeasure = 0; double worstPrec = 0; double worstRec = 0;
+				for (EvaluationResult res : worstResult) {
+					worstFMeasure += res.getfMeasure()/worstResult.size();
+					worstPrec += res.getPrecision()/worstResult.size();
+					worstRec += res.getRecall()/worstResult.size();
+				}
+				double newFMeasure = 0; double newPrec = 0; double newRec = 0;
+				for (EvaluationResult res : newResult) {
+					newFMeasure += res.getfMeasure()/newResult.size();
+					newPrec += res.getPrecision()/newResult.size();
+					newRec += res.getRecall()/newResult.size();
+				}
+				System.out.println("--------MEMORY STATE--------");
+				for(int a = 0; a < this.fitness.length; a++) {
+					double fScore = 0.0;
+					for(EvaluationResult evalResult : this.fitness[a]) {
+						 fScore += evalResult.getfMeasure()/this.fitness[a].size();
+					}
+					System.out.println(a + ": " + fScore);
+				}
+				System.out.println("//--------MEMORY STATE--------");
+				System.out.print("\n" + worstResult + "\n==> Fscore:" + worstFMeasure + ", Precision:" + worstPrec + ", Recall:" + worstRec + "\n->\n" + newResult
+						+ "\n==> Fscore:" + newFMeasure + ", Precision:" + newPrec + ", Recall:" + newRec);
 			}
+			
 			solutions.set(worstResultIdx, newSolution);
 			fitness[worstResultIdx] = newResult;
 			overallOffsets[worstResultIdx] = newSolutionOffset;
-			
+	
 			foundOptimum = true;
 			for (int i = 0; i < newResult.size(); i++) {
 				EvaluationResult stateResult = newResult.get(i);
@@ -129,7 +157,9 @@ public class HarmonyMemory {
 	}
 	
 	
-	
+	public int getBestIndex(boolean minimizeBandwidth) {
+		return this.findBestEvalResult(minimizeBandwidth);
+	}
 	public double getBestAvgFMeasure(boolean minimizeBandwidth) {
 		int bestIndex = this.findBestEvalResult(minimizeBandwidth);
 		List<EvaluationResult> best = this.fitness[bestIndex];
@@ -231,29 +261,24 @@ public class HarmonyMemory {
 	 *         results, 0 if results (precision and recall) are equal in both lists
 	 */
 	private int cmpListEvalResults(List<EvaluationResult> evalList1, double solOffset1, List<EvaluationResult> evalList2, double solOffset2, boolean print, boolean minimizeBandwidth) {
-		double avgPrecisionList1 = 0;
-		double avgPrecisionList2 = 0;
-		double avgRecallList1 = 0;
-		double avgRecallList2 = 0;
+		double avgFMeasureList1 = 0;
+		double avgFMeasureList2 = 0;
+
 
 		for (EvaluationResult evalResult : evalList1) {
-			avgPrecisionList1 += evalResult.getPrecision();
-			avgRecallList1 += evalResult.getRecall();
+			avgFMeasureList1 += evalResult.getfMeasure();
 		}
 		for (EvaluationResult evalResult : evalList2) {
-			avgPrecisionList2 += evalResult.getPrecision();
-			avgRecallList2 += evalResult.getRecall();
+			avgFMeasureList2 += evalResult.getfMeasure();
 		}
-		avgPrecisionList1 /= evalList1.size();
-		avgRecallList1 /= evalList1.size();
-		avgPrecisionList2 /= evalList2.size();
-		avgRecallList2 /= evalList2.size();
+		avgFMeasureList1 /= evalList1.size();
+		avgFMeasureList2 /= evalList2.size();
 		
-		if ((avgPrecisionList1 + avgRecallList1) > (avgPrecisionList2 + avgRecallList2)) {
-			if(print)System.out.format("Swapped for better precision/recall! (%.4f > %.4f)\n", avgPrecisionList1+avgRecallList1, avgPrecisionList2+avgRecallList2);
+		if (avgFMeasureList1 > avgFMeasureList2) {
+			if(print)System.out.format("Swapped for better f-measure! (%.4f > %.4f)\n", avgFMeasureList1, avgFMeasureList2);
 
 			return 1;
-		} else if ((avgPrecisionList1 + avgRecallList1) == (avgPrecisionList2 + avgRecallList2)) {
+		} else if (avgFMeasureList1 == avgFMeasureList2) {
 			if(minimizeBandwidth && solOffset1 < solOffset2) {
 				if(print)System.out.format("Swapped for narrower range! (%.4f < %.4f)\n", solOffset1, solOffset2);
 				return 1;
