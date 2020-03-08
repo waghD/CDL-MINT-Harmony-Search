@@ -35,6 +35,8 @@ public class Main {
 	 */
 	private static final boolean PRINT_NEW_SOLUTIONS = false;
 	private static final boolean PRINT_MEMORY_SWAPS = false;
+	private static final String OUTPUT_DIRECTORY = "../harmonyresult";
+	private static final String TEST_NAME = "output_test";
 
 	public static void main(String[] args) {
 		setUpDatabase("./lib/Daten_156.csv", false, 0);
@@ -46,11 +48,15 @@ public class Main {
 		List<AxisStream> axisList = new ArrayList<AxisStream>(Arrays.asList(axisArr));
 
 		eval.setUpRealDataStream(axisList);
+		
+		String outputDir = OUTPUT_DIRECTORY + "/" + TEST_NAME;
+		
+		new File(outputDir).mkdirs();
 
 		PrintStream out = null;
 		List<Double> accList = new ArrayList<Double>(Arrays.asList(0.9));
 		List<Double> adjList = new ArrayList<Double>(Arrays.asList(0.5));
-		List<Integer> sizeList = new ArrayList<Integer>(Arrays.asList(10));
+		List<Integer> sizeList = new ArrayList<Integer>(Arrays.asList(50));
 		List<Double> bandwidthList = new ArrayList<Double>(Arrays.asList(0.04));
 		DecimalFormat df = new DecimalFormat("#.###");
 		df.setRoundingMode(RoundingMode.CEILING);
@@ -60,8 +66,10 @@ public class Main {
 				for (int size : sizeList) {
 					for (double bandwidth : bandwidthList) {
 						
+						String fileBase = outputDir + "/" + TEST_NAME + "_" + acc + "_" + adj + "_" + size + "_" + bandwidth;
+						
 						try { 
-							out = new PrintStream(new FileOutputStream("../harmonyresult/test_output.txt", true), true); 
+							out = new PrintStream(new FileOutputStream(fileBase + "_main" + ".txt", true), true); 
 							System.setOut(out); 
 						} catch (IOException e) { 
 							System.err.print(e.getMessage());
@@ -84,8 +92,23 @@ public class Main {
 						System.out.println(hpa);
 
 						// number of iterations for average calculation
-						for (int i = 0; i < 1; i++) {
-							resultList.add(runHarmonySearch(hpa, 100, false, statesToNotEvaluateList, 0, 0.4, false));
+						for (int i = 0; i < 10; i++) {
+							try { 
+								out = new PrintStream(new FileOutputStream(fileBase + "_" + i + ".txt", true), true); 
+								System.setOut(out); 
+							} catch (IOException e) { 
+								System.err.print(e.getMessage());
+								e.printStackTrace();
+							}
+							resultList.add(runHarmonySearch(hpa, 100, false, statesToNotEvaluateList, 0, 1, true));
+						}
+						
+						try { 
+							out = new PrintStream(new FileOutputStream(fileBase + "_main" + ".txt", true), true); 
+							System.setOut(out); 
+						} catch (IOException e) { 
+							System.err.print(e.getMessage());
+							e.printStackTrace();
 						}
 
 						List<Integer> iterationsList = new ArrayList<Integer>();
