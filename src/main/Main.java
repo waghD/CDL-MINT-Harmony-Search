@@ -36,11 +36,11 @@ public class Main {
 	private static final boolean PRINT_NEW_SOLUTIONS = false;
 	private static final boolean PRINT_MEMORY_SWAPS = false;
 	private static final String OUTPUT_DIRECTORY = "../harmonyresult";
-	private static final String TEST_NAME = "output_test";
+	private static final String TEST_NAME = "random_search_12";
 
 	public static void main(String[] args) {
-		setUpDatabase("./lib/Daten_156.csv", false, 0);
-		Evaluation eval = new Evaluation("./lib/realStates_156.csv");
+		setUpDatabase("./lib/Daten_12_156.csv", false, 0);
+		Evaluation eval = new Evaluation("./lib/realStates_12_156.csv");
 		// SetUp all information about the states in the files
 
 		// Test
@@ -54,9 +54,9 @@ public class Main {
 		new File(outputDir).mkdirs();
 
 		PrintStream out = null;
-		List<Double> accList = new ArrayList<Double>(Arrays.asList(0.9));
+		List<Double> accList = new ArrayList<Double>(Arrays.asList(0d));
 		List<Double> adjList = new ArrayList<Double>(Arrays.asList(0.5));
-		List<Integer> sizeList = new ArrayList<Integer>(Arrays.asList(50));
+		List<Integer> sizeList = new ArrayList<Integer>(Arrays.asList(1));
 		List<Double> bandwidthList = new ArrayList<Double>(Arrays.asList(0.04));
 		DecimalFormat df = new DecimalFormat("#.###");
 		df.setRoundingMode(RoundingMode.CEILING);
@@ -92,7 +92,7 @@ public class Main {
 						System.out.println(hpa);
 
 						// number of iterations for average calculation
-						for (int i = 0; i < 10; i++) {
+						for (int i = 0; i < 30; i++) {
 							try { 
 								out = new PrintStream(new FileOutputStream(fileBase + "_" + i + ".txt", true), true); 
 								System.setOut(out); 
@@ -100,7 +100,7 @@ public class Main {
 								System.err.print(e.getMessage());
 								e.printStackTrace();
 							}
-							resultList.add(runHarmonySearch(hpa, 100, false, statesToNotEvaluateList, 0, 1, true));
+							resultList.add(runHarmonySearch(hpa, 10000, false, statesToNotEvaluateList, 0, 1, true));
 						}
 						
 						try { 
