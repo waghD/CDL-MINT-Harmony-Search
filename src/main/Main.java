@@ -60,9 +60,13 @@ public class Main {
 				for (int size : sizeList) {
 					for (double bandwidth : bandwidthList) {
 						
-						  try { out = new PrintStream(new FileOutputStream("out_2_states_156_notMinimized_0403.txt", true), true); System.setOut(out); } catch
-						  (IOException e) { // TODO Auto-generated catch block e.printStackTrace(); 
-							  }
+						try { 
+							out = new PrintStream(new FileOutputStream("../harmonyresult/test_output.txt", true), true); 
+							System.setOut(out); 
+						} catch (IOException e) { 
+							System.err.print(e.getMessage());
+							e.printStackTrace();
+						}
 						  
 						 
 
@@ -81,8 +85,7 @@ public class Main {
 
 						// number of iterations for average calculation
 						for (int i = 0; i < 1; i++) {
-							resultList.add(runHarmonySearch(hpa, 10000, false, statesToNotEvaluateList, 0, 0.4, false));
-							
+							resultList.add(runHarmonySearch(hpa, 100, false, statesToNotEvaluateList, 0, 0.4, false));
 						}
 
 						List<Integer> iterationsList = new ArrayList<Integer>();
@@ -124,8 +127,10 @@ public class Main {
 						System.out.println("Avg Recall: " + avgRec);
 						System.out.println("Avg F-measure: " + avgFMeasure);
 
-						
-						 out.close(); //File theFile = new File("output/156/rAccept_" +
+						if(out != null) {
+							out.close();
+						}
+						//File theFile = new File("output/156/rAccept_" +
 						 /* String.valueOf(acc) + "_band_0.1_rAdj_" + String.valueOf(adj) + "_memSize_" +
 						 * String.valueOf(size) + ".txt"); theFile.renameTo(new
 						 * File("output/156/rAccept_" + String.valueOf(acc) + "_band_0.1_rAdj_" +
