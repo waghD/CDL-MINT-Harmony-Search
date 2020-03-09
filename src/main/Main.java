@@ -35,10 +35,12 @@ public class Main {
 	 */
 	private static final boolean PRINT_NEW_SOLUTIONS = false;
 	private static final boolean PRINT_MEMORY_SWAPS = false;
+	private static final String OUTPUT_DIRECTORY = "../harmonyresult";
+	private static final String TEST_NAME = "random_search_12";
 
 	public static void main(String[] args) {
-		setUpDatabase("./lib/Daten_156.csv", false, 0);
-		Evaluation eval = new Evaluation("./lib/realStates_156.csv");
+		setUpDatabase("./lib/Daten_12_156.csv", false, 0);
+		Evaluation eval = new Evaluation("./lib/realStates_12_156.csv");
 		// SetUp all information about the states in the files
 
 		// Test
@@ -46,11 +48,15 @@ public class Main {
 		List<AxisStream> axisList = new ArrayList<AxisStream>(Arrays.asList(axisArr));
 
 		eval.setUpRealDataStream(axisList);
+		
+		String outputDir = OUTPUT_DIRECTORY + "/" + TEST_NAME;
+		
+		new File(outputDir).mkdirs();
 
 		PrintStream out = null;
-		List<Double> accList = new ArrayList<Double>(Arrays.asList(0.9));
+		List<Double> accList = new ArrayList<Double>(Arrays.asList(0d));
 		List<Double> adjList = new ArrayList<Double>(Arrays.asList(0.5));
-		List<Integer> sizeList = new ArrayList<Integer>(Arrays.asList(10));
+		List<Integer> sizeList = new ArrayList<Integer>(Arrays.asList(1));
 		List<Double> bandwidthList = new ArrayList<Double>(Arrays.asList(0.04));
 		DecimalFormat df = new DecimalFormat("#.###");
 		df.setRoundingMode(RoundingMode.CEILING);
@@ -60,9 +66,15 @@ public class Main {
 				for (int size : sizeList) {
 					for (double bandwidth : bandwidthList) {
 						
-						  try { out = new PrintStream(new FileOutputStream("out_2_states_156_notMinimized_0403.txt", true), true); System.setOut(out); } catch
-						  (IOException e) { // TODO Auto-generated catch block e.printStackTrace(); 
-							  }
+						String fileBase = outputDir + "/" + TEST_NAME + "_" + acc + "_" + adj + "_" + size + "_" + bandwidth;
+						
+						try { 
+							out = new PrintStream(new FileOutputStream(fileBase + "_main" + ".txt", true), true); 
+							System.setOut(out); 
+						} catch (IOException e) { 
+							System.err.print(e.getMessage());
+							e.printStackTrace();
+						}
 						  
 						 
 
@@ -80,9 +92,23 @@ public class Main {
 						System.out.println(hpa);
 
 						// number of iterations for average calculation
-						for (int i = 0; i < 1; i++) {
-							resultList.add(runHarmonySearch(hpa, 10000, false, statesToNotEvaluateList, 0, 0.4, false));
-							
+						for (int i = 0; i < 30; i++) {
+							try { 
+								out = new PrintStream(new FileOutputStream(fileBase + "_" + i + ".txt", true), true); 
+								System.setOut(out); 
+							} catch (IOException e) { 
+								System.err.print(e.getMessage());
+								e.printStackTrace();
+							}
+							resultList.add(runHarmonySearch(hpa, 10000, false, statesToNotEvaluateList, 0, 1, true));
+						}
+						
+						try { 
+							out = new PrintStream(new FileOutputStream(fileBase + "_main" + ".txt", true), true); 
+							System.setOut(out); 
+						} catch (IOException e) { 
+							System.err.print(e.getMessage());
+							e.printStackTrace();
 						}
 
 						List<Integer> iterationsList = new ArrayList<Integer>();
@@ -124,8 +150,10 @@ public class Main {
 						System.out.println("Avg Recall: " + avgRec);
 						System.out.println("Avg F-measure: " + avgFMeasure);
 
-						
-						 out.close(); //File theFile = new File("output/156/rAccept_" +
+						if(out != null) {
+							out.close();
+						}
+						//File theFile = new File("output/156/rAccept_" +
 						 /* String.valueOf(acc) + "_band_0.1_rAdj_" + String.valueOf(adj) + "_memSize_" +
 						 * String.valueOf(size) + ".txt"); theFile.renameTo(new
 						 * File("output/156/rAccept_" + String.valueOf(acc) + "_band_0.1_rAdj_" +

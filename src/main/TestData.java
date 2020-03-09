@@ -24,7 +24,8 @@ import design.State;
 
 public class TestData {
 
-	public static String MODEL_FILE_PATH = "model/System03.xmi";
+	public static String MODEL_FILE_PATH = "model/System4.xmi";
+	private static Block cachedStates;
 	/**
 	 * Sets up block object with data streams
 	 * 
@@ -33,6 +34,11 @@ public class TestData {
 	 * @throws SAXException 
 	 */
 	public static Block setUpDataStream(List<AxisStream> axisList) {
+		
+		if(TestData.cachedStates != null) {
+			return TestData.cachedStates;
+		}
+		
 		List<State> states = new ArrayList<State>();
 
 		
@@ -123,12 +129,10 @@ public class TestData {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		 
-	
-		
 			
 		// SetUp Block
-		return new Block("roboticArm", states);
+		TestData.cachedStates = new Block("roboticArm", states);
+		return TestData.cachedStates;
 	}
 	
 }
