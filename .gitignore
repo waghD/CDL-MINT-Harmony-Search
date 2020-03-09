@@ -22,6 +22,7 @@ src-gen_xtend/
 
 #output files
 modelTest/
+test_out/
 
 out_prints/
 output/
