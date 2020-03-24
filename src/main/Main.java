@@ -36,7 +36,7 @@ public class Main {
 	private static final boolean PRINT_NEW_SOLUTIONS = false;
 	private static final boolean PRINT_MEMORY_SWAPS = false;
 	private static final String OUTPUT_DIRECTORY = "../harmonyresult";
-	private static final String TEST_NAME = "random_search_12";
+	private static final String TEST_NAME = "wilcox_random_12";
 
 	public static void main(String[] args) {
 		setUpDatabase("./lib/Daten_12_156.csv", false, 0);
@@ -66,11 +66,13 @@ public class Main {
 				for (int size : sizeList) {
 					for (double bandwidth : bandwidthList) {
 						
+						PrintStream metaFile = null;
+						
 						String fileBase = outputDir + "/" + TEST_NAME + "_" + acc + "_" + adj + "_" + size + "_" + bandwidth;
 						
 						try { 
-							out = new PrintStream(new FileOutputStream(fileBase + "_main" + ".txt", true), true); 
-							System.setOut(out); 
+							metaFile = new PrintStream(new FileOutputStream(fileBase + "_main" + ".txt", true), true); 
+							System.setOut(metaFile); 
 						} catch (IOException e) { 
 							System.err.print(e.getMessage());
 							e.printStackTrace();
@@ -92,6 +94,7 @@ public class Main {
 						System.out.println(hpa);
 
 						// number of iterations for average calculation
+						System.out.println("Iteration;AvgFMeasure;AvgPrecision;AvgRecall");
 						for (int i = 0; i < 30; i++) {
 							try { 
 								out = new PrintStream(new FileOutputStream(fileBase + "_" + i + ".txt", true), true); 
@@ -100,16 +103,14 @@ public class Main {
 								System.err.print(e.getMessage());
 								e.printStackTrace();
 							}
-							resultList.add(runHarmonySearch(hpa, 10000, false, statesToNotEvaluateList, 0, 1, true));
+							HarmonyResult result = runHarmonySearch(hpa, 10000, false, statesToNotEvaluateList, 0, 1, true);
+							out.close();
+							System.setOut(metaFile);
+							System.out.print(i + ";" + result.getAvgBestFMeasure() + ";" + result.getAvgBestPrecision() + ";" + result.getAvgBestRecall() + "\n");
+							resultList.add(result);
 						}
-						
-						try { 
-							out = new PrintStream(new FileOutputStream(fileBase + "_main" + ".txt", true), true); 
-							System.setOut(out); 
-						} catch (IOException e) { 
-							System.err.print(e.getMessage());
-							e.printStackTrace();
-						}
+
+						System.setOut(metaFile); 
 
 						List<Integer> iterationsList = new ArrayList<Integer>();
 						List<Double> timeTilOptList = new ArrayList<Double>();
@@ -152,6 +153,9 @@ public class Main {
 
 						if(out != null) {
 							out.close();
+						}
+						if(metaFile != null) {
+							metaFile.close();
 						}
 						//File theFile = new File("output/156/rAccept_" +
 						 /* String.valueOf(acc) + "_band_0.1_rAdj_" + String.valueOf(adj) + "_memSize_" +
