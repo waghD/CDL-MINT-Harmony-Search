@@ -2,7 +2,10 @@ package harmony;
 
 public class HarmonyResult {
 	private boolean optimumFound;
-	private int nrOfIterationsForOptimum = 0;
+	private int nrOfIterationsForBestFMeasure = 0;
+	private int nrOfIterationsForBestMinimizedRange = 0;
+	private double absOffsetBestInitial = 0.0;
+	private double absOffsetBestMinimized = 0.0;
 	private double runtimeAllIterations = 0;
 	private double runtimeTilOptimumFound = 0;
 	private double avgBestPrecision = 0;
@@ -10,6 +13,20 @@ public class HarmonyResult {
 	private double avgBestFMeasure = 0;
 	private double absoluteOffset = 0;
 	
+	public double getAbsOffsetBestInitial() {
+		return absOffsetBestInitial;
+	}
+	
+	public void setAbsOffsetBestInitial(double absOffsetBestInitial) {
+		this.absOffsetBestInitial = absOffsetBestInitial;
+	}
+	public double getAbsOffsetBestMinimized() {
+		return absOffsetBestMinimized;
+	}
+	
+	public void setAbsOffsetBestMinimized(double absOffsetBestMinimized) {
+		this.absOffsetBestMinimized = absOffsetBestMinimized;
+	}
 	public double getAbsoluteOffset() {
 		return absoluteOffset;
 	}
@@ -48,12 +65,17 @@ public class HarmonyResult {
 	public void setOptimumFound(boolean opt) {
 		this.optimumFound = opt;
 	}
-	
-	public int getNrOfIterationsForOptimum() {
-		return nrOfIterationsForOptimum;
+	public int getNrOfIterationsForBestMinimizedRange() {
+		return nrOfIterationsForBestMinimizedRange;
 	}
-	public void setNrOfIterationsForOptimum(int nrOfIterationsForOptimum) {
-		this.nrOfIterationsForOptimum = nrOfIterationsForOptimum;
+	public void setNrOfIterationsForBestMinimizedRange(int nrOfIterationsForBestMinimizedRange) {
+		this.nrOfIterationsForBestMinimizedRange = nrOfIterationsForBestMinimizedRange;
+	}
+	public int getNrOfIterationsForBestFMeasure() {
+		return nrOfIterationsForBestFMeasure;
+	}
+	public void setNrOfIterationsForBestFMeasure(int nrOfIterationsForBestFMeasure) {
+		this.nrOfIterationsForBestFMeasure = nrOfIterationsForBestFMeasure;
 	}
 	public double getRuntimeIterations() {
 		return runtimeAllIterations;
@@ -70,7 +92,9 @@ public class HarmonyResult {
 	}
 	
 	public String toString() {
-		return "Number of iterations til optimum found: " + this.nrOfIterationsForOptimum
+		return "Number of iterations til best f-measure found: " + this.nrOfIterationsForBestFMeasure
+				+ "\nNumber of iterations til best minimized range: " + this.nrOfIterationsForBestMinimizedRange
+				+ "\nAbs Offset Difference (between best f-measure and offset optimized best f-measure): " + ((1.0-(this.absOffsetBestMinimized/this.absOffsetBestInitial))*100) + "%"
 				+ "\nRuntime of all iterations [s]: " + this.runtimeAllIterations
 				+ "\nRuntime til optimum found [s]: " + (this.runtimeTilOptimumFound > 0.0 ? this.runtimeTilOptimumFound: "No optimum found");
 		

@@ -36,7 +36,7 @@ public class Main {
 	private static final boolean PRINT_NEW_SOLUTIONS = false;
 	private static final boolean PRINT_MEMORY_SWAPS = false;
 	private static final String OUTPUT_DIRECTORY = "../harmonyresult";
-	private static final String TEST_NAME = "wilcox_random_12";
+	private static final String TEST_NAME = "states_12_10k_iterations";
 
 	public static void main(String[] args) {
 		setUpDatabase("./lib/Daten_12_156.csv", false, 0);
@@ -54,10 +54,10 @@ public class Main {
 		new File(outputDir).mkdirs();
 
 		PrintStream out = null;
-		List<Double> accList = new ArrayList<Double>(Arrays.asList(0d));
-		List<Double> adjList = new ArrayList<Double>(Arrays.asList(0.5));
-		List<Integer> sizeList = new ArrayList<Integer>(Arrays.asList(1));
-		List<Double> bandwidthList = new ArrayList<Double>(Arrays.asList(0.04));
+		List<Double> accList = new ArrayList<Double>(Arrays.asList(0.7, 0.9));
+		List<Double> adjList = new ArrayList<Double>(Arrays.asList(0.1));
+		List<Integer> sizeList = new ArrayList<Integer>(Arrays.asList(50));
+		List<Double> bandwidthList = new ArrayList<Double>(Arrays.asList(0.04, 0.4));
 		DecimalFormat df = new DecimalFormat("#.###");
 		df.setRoundingMode(RoundingMode.CEILING);
 
@@ -103,7 +103,7 @@ public class Main {
 								System.err.print(e.getMessage());
 								e.printStackTrace();
 							}
-							HarmonyResult result = runHarmonySearch(hpa, 10000, false, statesToNotEvaluateList, 0, 1, true);
+							HarmonyResult result = runHarmonySearch(hpa, 10000, false, statesToNotEvaluateList, 0, 0.4, true);
 							out.close();
 							System.setOut(metaFile);
 							System.out.print(i + ";" + result.getAvgBestFMeasure() + ";" + result.getAvgBestPrecision() + ";" + result.getAvgBestRecall() + "\n");
@@ -112,7 +112,9 @@ public class Main {
 
 						System.setOut(metaFile); 
 
-						List<Integer> iterationsList = new ArrayList<Integer>();
+						List<Integer> iterationsFMeasureList = new ArrayList<Integer>();
+						//List<Integer> iterationsMinRangeList = new ArrayList<Integer>();
+						List<Double> absOffsetPercDiff = new ArrayList<Double>();
 						List<Double> timeTilOptList = new ArrayList<Double>();
 						List<Double> avgPrecisionList = new ArrayList<Double>();
 						List<Double> avgRecallList = new ArrayList<Double>();
@@ -124,9 +126,13 @@ public class Main {
 						for (HarmonyResult res : resultList) {
 							// System.out.println("Iterations: " + res.getNrOfIterationsForOptimum() + " ("
 							// + res.getRuntimeTilOptimumFound() + "s)" );
-							System.out.println("Iterations (Exec. " + repetition + "): " + res.getNrOfIterationsForOptimum() + " ("
-									+ res.getRuntimeTilOptimumFound() + "s)");
-							iterationsList.add(res.getNrOfIterationsForOptimum());
+							System.out.println("Iterations til best f-measure (Exec. " + repetition + "): " + res.getNrOfIterationsForBestFMeasure() + " ("
+									+ res.getRuntimeTilOptimumFound() + "s)"
+							);
+							
+							iterationsFMeasureList.add(res.getNrOfIterationsForBestFMeasure());
+							//iterationsMinRangeList.add(res.getNrOfIterationsForBestMinimizedRange());
+							absOffsetPercDiff.add(res.getAbsOffsetBestMinimized()/res.getAbsOffsetBestInitial());
 							timeTilOptList.add(res.getRuntimeTilOptimumFound());
 							avgPrecisionList.add(res.getAvgBestPrecision());
 							avgRecallList.add(res.getAvgBestRecall());
@@ -137,14 +143,19 @@ public class Main {
 
 						System.out.println(Printer.div);
 						Printer.printHeader("After all repetitions:");
-						double avgIterations = iterationsList.stream().mapToInt(x -> x).average().orElse(-1);
+						double avgIterationsFMeasure = iterationsFMeasureList.stream().mapToInt(x -> x).average().orElse(-1);
+						//double avgIterationsMinRange = iterationsMinRangeList.stream().mapToInt(x -> x).average().orElse(-1);
+						double avgAbsOffsetPercDiff = absOffsetPercDiff.stream().mapToDouble(x -> x).average().orElse(-1);
+
 						double avgTimeTilOpt = timeTilOptList.stream().mapToDouble(x -> x).average().orElse(-1);
 						double avgTimeOverall = timeOverallList.stream().mapToDouble(x -> x).average().orElse(-1);
 						double avgPrec = avgPrecisionList.stream().mapToDouble(x -> x).average().orElse(-1);
 						double avgRec = avgRecallList.stream().mapToDouble(x -> x).average().orElse(-1);
 						double avgFMeasure = avgFMeasureList.stream().mapToDouble(x -> x).average().orElse(-1);
 
-						System.out.println("Iterations (avg): " + avgIterations);
+						System.out.println("Iterations til best f-measure (avg): " + avgIterationsFMeasure);
+						//System.out.println("Iterations til best minimized range (avg): " + avgIterationsMinRange);
+						System.out.println("Abs Offset Difference (between best f-measure and offset optimized best f-measure), (avg): " + ((1.0-avgAbsOffsetPercDiff)*100.0) + "%");
 						System.out.println("Time til Best found (avg): " + avgTimeTilOpt);
 						System.out.println("Time overall (avg): " + avgTimeOverall);
 						System.out.println("Avg Precision: " + avgPrec);

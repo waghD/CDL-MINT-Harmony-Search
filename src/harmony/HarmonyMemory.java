@@ -40,6 +40,10 @@ public class HarmonyMemory {
 		return this.fitness;
 	}
 	
+	public double[] getOverallOffsets() {
+		return this.overallOffsets;
+	}
+	
 	public HarmonyMemory(HarmonyParameters params, List<String> statesToEvaluateList, double spaceMin, double spaceMax) {
 		axisStream = params.getAxisStreams();
 		solutions = this.generateDefaultMemory(axisStream, params.getMemorySize(), spaceMin, spaceMax);
@@ -150,6 +154,14 @@ public class HarmonyMemory {
 		return foundOptimum;
 	}
 	
+	/**
+	 * Tests if new solution is the currently best solution 
+	 * in whole memory.
+	 * 
+	 * @param testSolution .. solution
+	 * @param minimizeBandwidth .. determine best solution by also accounting for minimal bandwidth
+	 * @return 1 .. 
+	 */
 	public boolean isSolutionBest(Map<String, PropertyBoundaries> testSolution, boolean minimizeBandwidth) {
 		int bestIndex = this.findBestEvalResult(minimizeBandwidth);
 		Map<String, PropertyBoundaries> bestSolution = this.solutions.get(bestIndex);
@@ -225,9 +237,9 @@ public class HarmonyMemory {
 	}
 	
 	/**
-	 * Determines worst result in list of solution maps.
+	 * Determines best result in list of solution maps.
 	 * 
-	 * Worst solution is determined by worst precision/recall
+	 * Best solution is determined by highest f-measure
 	 * 
 	 * @param evalResultListofLists
 	 * @return

@@ -104,13 +104,27 @@ public class HarmonySearch {
 				newSolution.forEach((propertyName, boundaries) -> System.out.println(propertyName + ": " + boundaries));
 
 			}
-
+			//pre swap
+			double bestAbsOffset = harmonyMemory.getBestAbsOffset(minimizeBandwidth);
+			double bestAvgFMeasure = harmonyMemory.getBestAvgFMeasure(minimizeBandwidth);
+			
 			boolean foundOptimum = harmonyMemory.evalSolution(newSolution, printMemorySwaps, statesToEvaluateList, minimizeBandwidth);
 			boolean isBest = harmonyMemory.isSolutionBest(newSolution, minimizeBandwidth);
-			// only remember iteration where FIRST optimum was found
+
+			//after swap
+			double bestAbsOffsetAfterSwap = harmonyMemory.getBestAbsOffset(minimizeBandwidth);
+			double bestAvgFMeasureAfterSwap = harmonyMemory.getBestAvgFMeasure(minimizeBandwidth);
+			
 			if (foundOptimum || isBest) {
 				hs.setRuntimeTilOptimumFound((System.currentTimeMillis() - startIterTime) / 1000.0);
-				hs.setNrOfIterationsForOptimum(i + 1);
+				if(bestAvgFMeasureAfterSwap > bestAvgFMeasure) {
+					hs.setNrOfIterationsForBestFMeasure(i + 1);
+					hs.setAbsOffsetBestInitial(harmonyMemory.getBestAbsOffset(minimizeBandwidth));
+					hs.setAbsOffsetBestMinimized(harmonyMemory.getBestAbsOffset(minimizeBandwidth));
+
+				} else {
+					hs.setAbsOffsetBestMinimized(harmonyMemory.getBestAbsOffset(minimizeBandwidth));
+				}
 				hs.setOptimumFound(foundOptimum);
 				hs.setAvgBestPrecision(harmonyMemory.getBestAvgPrecision(minimizeBandwidth));
 				hs.setAvgBestRecall(harmonyMemory.getBestAvgRecall(minimizeBandwidth));
