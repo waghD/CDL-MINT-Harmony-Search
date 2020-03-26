@@ -94,7 +94,7 @@ public class Main {
 						System.out.println(hpa);
 
 						// number of iterations for average calculation
-						System.out.println("Iteration;AvgFMeasure;AvgPrecision;AvgRecall");
+						System.out.println("Iteration;AvgFMeasure;AvgPrecision;AvgRecall;IterationBestFMeasure;IterationMinimization");
 						for (int i = 0; i < 30; i++) {
 							try { 
 								out = new PrintStream(new FileOutputStream(fileBase + "_" + i + ".txt", true), true); 
@@ -106,7 +106,7 @@ public class Main {
 							HarmonyResult result = runHarmonySearch(hpa, 10000, false, statesToNotEvaluateList, 0, 0.4, true);
 							out.close();
 							System.setOut(metaFile);
-							System.out.print(i + ";" + result.getAvgBestFMeasure() + ";" + result.getAvgBestPrecision() + ";" + result.getAvgBestRecall() + "\n");
+							System.out.print(i + ";" + result.getAvgBestFMeasure() + ";" + result.getAvgBestPrecision() + ";" + result.getAvgBestRecall() +";"+ result.getNrOfIterationsForBestFMeasure() + ";" + result.getNrOfIterationsForBestMinimizedRange() + "\n");
 							resultList.add(result);
 						}
 
