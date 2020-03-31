@@ -84,7 +84,14 @@ public class HarmonySearch {
 								.get(curPropertyName).getAsArray()[j];
 
 						if (rand.nextDouble() < harmonyParameters.getR_pa()) {
-							solVec[j] = solVec[j] + (nextRandDoubleRandSign(0, 1) * harmonyParameters.getBand());
+							Map<String, PropertyBoundaries> map1 = harmonyMemory.getMemory().get(rand.nextInt(nrOfSolutionsInMemory));
+							Map<String, PropertyBoundaries> map2 = harmonyMemory.getMemory().get(rand.nextInt(nrOfSolutionsInMemory));
+							List<String> keysAsArray1 = new ArrayList<String>(map1.keySet());
+							double randMemSol1 = map1.get(keysAsArray1.get(rand.nextInt(keysAsArray1.size()))).getAsArray()[rand.nextInt(2)];
+							double randMemSol2 = map2.get(keysAsArray1.get(rand.nextInt(keysAsArray1.size()))).getAsArray()[rand.nextInt(2)];
+
+							solVec[j] = solVec[j] + rand.nextDouble()*
+									(randMemSol1 - randMemSol2);
 						}
 					} else {
 
