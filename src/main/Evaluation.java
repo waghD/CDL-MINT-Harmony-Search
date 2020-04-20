@@ -47,9 +47,17 @@ public class Evaluation {
 		Evaluation.instance = this;
 	}
 
-	public List<EvaluationResult> evaluate(Block roboticArm, Map<String, PropertyBoundaries> propertyMap, boolean printRes, List<String> statesToEvaluateList) {
+	/**
+	 * Evaluates the given solution map
+	 * @param roboticArm .. Model with list of expected States
+	 * @param propertyMap .. Solution Map 
+	 * @param printRes .. flag for verbose printing
+	 * @param statesToIgnore .. states that should not be evaluated
+	 * @return List<EvaluationResult> .. Results from Evaluation in List mapped per State
+	 */
+	public List<EvaluationResult> evaluate(Block roboticArm, Map<String, PropertyBoundaries> propertyMap, boolean printRes, List<String> statesToIgnore) {
 		ArrayList<IdentifiedState> recStates = new ArrayList<IdentifiedState>();
-		recStates = this.testRecognition(roboticArm, propertyMap, statesToEvaluateList);
+		recStates = this.testRecognition(roboticArm, propertyMap, statesToIgnore);
 		List<EvaluationResult> allResults = new ArrayList<EvaluationResult>();
 		if(printRes) {
 			PrintWriter pw;
@@ -89,13 +97,20 @@ public class Evaluation {
 		this.setUpRealDataStream(axisList);
 	}
 
-	public ArrayList<IdentifiedState> testRecognition(Block b, Map<String, PropertyBoundaries> propertyMap, List<String> statesToEvaluateList) {
+	/**
+	 * Finds all states in database that fit the currently evaluating solution
+	 * @param b.. Model of Block with states
+	 * @param propertyMap .. currently evaluating solution map
+	 * @param statesToIgnore .. states that are not evaluated
+	 * @return ArrayList<IdentifiedState> .. States that have been identified in the database
+	 */
+	public ArrayList<IdentifiedState> testRecognition(Block b, Map<String, PropertyBoundaries> propertyMap, List<String> statesToIgnore) {
 		TimeSeriesDatabase db = TimeSeriesDatabase.instance;
 		if (db == null)
 			return new ArrayList<IdentifiedState>();
 		ArrayList<IdentifiedState> result = new ArrayList<IdentifiedState>();
 		for (State s : b.getAssignedState()) {
-			if(statesToEvaluateList.size() == 0 || !statesToEvaluateList.contains(s.getName())) {
+			if(statesToIgnore.size() == 0 || !statesToIgnore.contains(s.getName())) {
 				result.addAll(db.recognizeState(s.getName(), s.getAssignedProperties(), propertyMap));
 			}
 		}
@@ -110,6 +125,11 @@ public class Evaluation {
 		this.realStates = realStates;
 	}
 
+	/**
+	 * Calculate Evaluation Results for all States
+	 * @param recognizedStates .. list of recognized states in Database
+	 * @return
+	 */
 	public List<EvaluationResult> calculatePrecisionRecall(List<IdentifiedState> recognizedStates) {
 		// all states based on their name
 		HashMap<String, List<IdentifiedState>> statesReal = new HashMap<String, List<IdentifiedState>>();
@@ -147,6 +167,13 @@ public class Evaluation {
 
 	}
 
+	/**
+	 * Calculates the Evaluation Result for a single State
+	 * @param statename .. State to evaluate
+	 * @param recognizedStates .. List of states that have been recognized
+	 * @param statesReal .. List of states that should have been recognized
+	 * @return
+	 */
 	private EvaluationResult calculatePrecisionRecall(String statename, List<IdentifiedState> recognizedStates,
 			HashMap<String, List<IdentifiedState>> statesReal) {
 		int intersection = 0;
@@ -176,6 +203,11 @@ public class Evaluation {
 	}
 
 
+	
+	/**
+	 * Reads data from csv file and writes it into the database
+	 * @param axisList
+	 */
 	public void setUpRealDataStream(List<AxisStream> axisList) {
 		String line = "";
 		String cvsSplitBy = ";";

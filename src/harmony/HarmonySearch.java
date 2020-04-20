@@ -16,14 +16,10 @@ public class HarmonySearch {
 
 	private HarmonyMemory harmonyMemory;
 	private HarmonyParameters harmonyParameters;
-	private double spaceMin; // minimum of search space
-	private double spaceMax; // maxiumum of search space
 
-	public HarmonySearch(HarmonyMemory memory, HarmonyParameters params, double spaceMin, double spaceMax) {
+	public HarmonySearch(HarmonyMemory memory, HarmonyParameters params) {
 		harmonyMemory = memory;
 		harmonyParameters = params;
-		this.spaceMin = spaceMin;
-		this.spaceMax = spaceMax;
 	}
 
 	/**
@@ -41,25 +37,16 @@ public class HarmonySearch {
 	 * if rand < param. adjustment rate) (3) completely random within the bandwith
 	 * (rand >= acceptance rate)
 	 * 
-	 * 
-	 * @param nrOfIter           .. number of iterations (each yields a new
-	 *                           solution)
-	 * @param stopIfOptimumFound .. if true, algorithm stops iteration loop when
-	 *                           optimum is found
-	 * @param printNewSolutions  .. print statements of newly generated solutions
-	 * @param printMemorySwaps   .. print statements of memory swaps
-	 * @return int .. number of iterations required to find optimum, 0 if no optimum
-	 *         was found
+	 * @return HarmonyResult Result Object containing Information about this Harmony Search run
 	 */
-	public HarmonyResult execHarmonySearch(int nrOfIter, boolean stopIfOptimumFound, List<String> statesToEvaluateList,
-			boolean printNewSolutions, boolean printMemorySwaps, boolean minimizeBandwidth) {
+	public HarmonyResult execHarmonySearch() {
 		Random rand = new Random();
 		HarmonyResult hs = new HarmonyResult();
 
-		if (printNewSolutions || printMemorySwaps)
+		if (harmonyParameters.getPrintNewSolutions() || harmonyParameters.getPrintMemorySwaps())
 			Printer.printHeader("ALGORITHM START");
 		long startIterTime = System.currentTimeMillis();
-		for (int i = 0; i < nrOfIter; i++) {
+		for (int i = 0; i < harmonyParameters.getNrOfIterations(); i++) {
 			// Init new solution map
 			Map<String, PropertyBoundaries> newSolution = new HashMap<String, PropertyBoundaries>();
 			// Get the property names (keys) of a solution map of a solution of the harmony
@@ -88,9 +75,9 @@ public class HarmonySearch {
 						}
 					} else {
 
-						solVec[j] = nextRandDouble(spaceMin, spaceMax);
+						solVec[j] = nextRandDouble(harmonyParameters.getLowerSearchBorder(), harmonyParameters.getUpperSearchBorder());
 
-						solVec[j] = nextRandDouble(spaceMin, spaceMax);
+						solVec[j] = nextRandDouble(harmonyParameters.getLowerSearchBorder(), harmonyParameters.getUpperSearchBorder());
 					}
 				}
 
@@ -99,41 +86,41 @@ public class HarmonySearch {
 				newSolution.get(curPropertyName).setUpper(solVec[1]);
 
 			}
-			if (printNewSolutions) {
+			if (harmonyParameters.getPrintNewSolutions()) {
 				Printer.printHeader("New solution (" + (i + 1) + ". iteration)");
 				newSolution.forEach((propertyName, boundaries) -> System.out.println(propertyName + ": " + boundaries));
 
 			}
 			//pre swap
-			double bestAbsOffset = harmonyMemory.getBestAbsOffset(minimizeBandwidth);
-			double bestAvgFMeasure = harmonyMemory.getBestAvgFMeasure(minimizeBandwidth);
+			double bestAbsOffset = harmonyMemory.getBestAbsOffset();
+			double bestAvgFMeasure = harmonyMemory.getBestAvgFMeasure();
 			
-			boolean foundOptimum = harmonyMemory.evalSolution(newSolution, printMemorySwaps, statesToEvaluateList, minimizeBandwidth);
-			boolean isBest = harmonyMemory.isSolutionBest(newSolution, minimizeBandwidth);
+			boolean foundOptimum = harmonyMemory.evalSolution(newSolution);
+			boolean isBest = harmonyMemory.isSolutionBest(newSolution);
 
 			//after swap
-			double bestAbsOffsetAfterSwap = harmonyMemory.getBestAbsOffset(minimizeBandwidth);
-			double bestAvgFMeasureAfterSwap = harmonyMemory.getBestAvgFMeasure(minimizeBandwidth);
+			double bestAbsOffsetAfterSwap = harmonyMemory.getBestAbsOffset();
+			double bestAvgFMeasureAfterSwap = harmonyMemory.getBestAvgFMeasure();
 			
 			if (foundOptimum || isBest) {
 				hs.setRuntimeTilOptimumFound((System.currentTimeMillis() - startIterTime) / 1000.0);
 				if(bestAvgFMeasureAfterSwap > bestAvgFMeasure) {
 					hs.setNrOfIterationsForBestFMeasure(i + 1);
-					hs.setAbsOffsetBestInitial(harmonyMemory.getBestAbsOffset(minimizeBandwidth));
-					hs.setAbsOffsetBestMinimized(harmonyMemory.getBestAbsOffset(minimizeBandwidth));
+					hs.setAbsOffsetBestInitial(harmonyMemory.getBestAbsOffset());
+					hs.setAbsOffsetBestMinimized(harmonyMemory.getBestAbsOffset());
 
 				} else {
-					hs.setAbsOffsetBestMinimized(harmonyMemory.getBestAbsOffset(minimizeBandwidth));
+					hs.setAbsOffsetBestMinimized(harmonyMemory.getBestAbsOffset());
 				}
 				hs.setOptimumFound(foundOptimum);
-				hs.setAvgBestPrecision(harmonyMemory.getBestAvgPrecision(minimizeBandwidth));
-				hs.setAvgBestRecall(harmonyMemory.getBestAvgRecall(minimizeBandwidth));
-				hs.setAvgBestFMeasure(harmonyMemory.getBestAvgFMeasure(minimizeBandwidth));
-				if (stopIfOptimumFound) {
+				hs.setAvgBestPrecision(harmonyMemory.getBestAvgPrecision());
+				hs.setAvgBestRecall(harmonyMemory.getBestAvgRecall());
+				hs.setAvgBestFMeasure(harmonyMemory.getBestAvgFMeasure());
+				if (harmonyParameters.getStopOnOptimum()) {
 					break;
 				}
 			}
-			System.out.println(i+1 + ";" + harmonyMemory.getBestIndex(minimizeBandwidth) + ";" + harmonyMemory.getBestAvgFMeasure(minimizeBandwidth) + ";" + harmonyMemory.getBestAbsOffset(minimizeBandwidth));
+			System.out.println(i+1 + ";" + harmonyMemory.getBestIndex() + ";" + harmonyMemory.getBestAvgFMeasure() + ";" + harmonyMemory.getBestAbsOffset());
 			
 
 		}
@@ -151,21 +138,5 @@ public class HarmonySearch {
 		Random rand = new Random();
 		double rv = rand.nextDouble() * (upper - lower) + lower;
 		return rand.nextDouble() >= 0.5 ? rv : (rv * -1);
-	}
-
-	public double getSpaceMin() {
-		return spaceMin;
-	}
-
-	public void setSpaceMin(double spaceMin) {
-		this.spaceMin = spaceMin;
-	}
-
-	public double getSpaceMax() {
-		return spaceMax;
-	}
-
-	public void setSpaceMax(double spaceMax) {
-		this.spaceMax = spaceMax;
 	}
 }

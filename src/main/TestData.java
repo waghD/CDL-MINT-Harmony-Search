@@ -24,7 +24,7 @@ import design.State;
 
 public class TestData {
 
-	public static String MODEL_FILE_PATH = "model/System4.xmi";
+	public static String MODEL_FILE_PATH = "model/System03.xmi";
 	private static Block cachedStates;
 	/**
 	 * Sets up block object with data streams
@@ -74,20 +74,6 @@ public class TestData {
 							 	 if(valString.length() > 0) {
 							 		val = Double.parseDouble(valString);
 							 	 }
-//									switch(this) {
-//									case BP:
-//										return 2;
-//									case MAP:
-//										return 3;
-//									case SAP:
-//										return 4;
-//									case WP:
-//										return 5;
-//									case GP:
-//										return 6;
-//									default:
-//										return 0;
-//									}
 							 	 String propName = assignmentElement.getAttribute("property");
 								 switch(propName) {
 								 	case "//@block.0/@property.0":
@@ -115,7 +101,6 @@ public class TestData {
 								 			props.set(4, new Property("wp", val));
 								 		}
 								 		break;
-								 		
 								 }
 							 }
 					    }
