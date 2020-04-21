@@ -6,9 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.ThreadLocalRandom;
-
-import main.EvaluationResult;
 import main.PropertyBoundaries;
 import output.Printer;
 
@@ -49,32 +46,39 @@ public class HarmonySearch {
 		for (int i = 0; i < harmonyParameters.getNrOfIterations(); i++) {
 			// Init new solution map
 			Map<String, PropertyBoundaries> newSolution = new HashMap<String, PropertyBoundaries>();
+			
 			// Get the property names (keys) of a solution map of a solution of the harmony
 			// memory (and convert to list)
 			Set<String> propertyNamesSet = harmonyMemory.getMemory().get(0).keySet();
 			List<String> propertyNamesList = new ArrayList<>(propertyNamesSet);
 
+			// create new empty solution
 			for (String prop : propertyNamesList) {
 				newSolution.put(prop, new PropertyBoundaries(0, 0));
 			}
-			// int nrOfProperties = hpa.getSolutions().get(0).size()
+			
+			// Iterate over all properties in solution and find calculate new values for each
 			for (int z = 0; z < propertyNamesList.size(); z++) {
 
 				String curPropertyName = propertyNamesList.get(z);
 				double[] solVec = new double[2]; // solution vector
 
 				for (int j = 0; j < 2; j++) {
+					
+					// If rand < acceptance rate -> generate solution by altering existing solutions
 					if (rand.nextDouble() < harmonyParameters.getR_accept()) {
 						int nrOfSolutionsInMemory = harmonyMemory.getMemory().size();
 
+						// get random solution from memory
 						solVec[j] = harmonyMemory.getMemory().get(rand.nextInt(nrOfSolutionsInMemory))
 								.get(curPropertyName).getAsArray()[j];
 
+						// if random double < pitch adjustment -> alter random solution from memory. Else take it as it is
 						if (rand.nextDouble() < harmonyParameters.getR_pa()) {
 							solVec[j] = solVec[j] + (nextRandDoubleRandSign(0, 1) * harmonyParameters.getBand());
 						}
 					} else {
-
+						// rand > acceptance rate -> generate new random solution
 						solVec[j] = nextRandDouble(harmonyParameters.getLowerSearchBorder(), harmonyParameters.getUpperSearchBorder());
 
 						solVec[j] = nextRandDouble(harmonyParameters.getLowerSearchBorder(), harmonyParameters.getUpperSearchBorder());
@@ -82,7 +86,6 @@ public class HarmonySearch {
 				}
 
 				newSolution.get(curPropertyName).setLower(solVec[0]);
-
 				newSolution.get(curPropertyName).setUpper(solVec[1]);
 
 			}
@@ -91,10 +94,11 @@ public class HarmonySearch {
 				newSolution.forEach((propertyName, boundaries) -> System.out.println(propertyName + ": " + boundaries));
 
 			}
-			//pre swap
+			//cache preswap values for comparison
 			double bestAbsOffset = harmonyMemory.getBestAbsOffset();
 			double bestAvgFMeasure = harmonyMemory.getBestAvgFMeasure();
 			
+			// Hand new solution over to memory. If is better than the worst solution in memory it will be stored
 			boolean foundOptimum = harmonyMemory.evalSolution(newSolution);
 			boolean isBest = harmonyMemory.isSolutionBest(newSolution);
 
@@ -102,8 +106,11 @@ public class HarmonySearch {
 			double bestAbsOffsetAfterSwap = harmonyMemory.getBestAbsOffset();
 			double bestAvgFMeasureAfterSwap = harmonyMemory.getBestAvgFMeasure();
 			
+			// store results in HarmonyResult object
 			if (foundOptimum || isBest) {
 				hs.setRuntimeTilOptimumFound((System.currentTimeMillis() - startIterTime) / 1000.0);
+				
+				// check if new solution is new best solution in memory
 				if(bestAvgFMeasureAfterSwap > bestAvgFMeasure) {
 					hs.setNrOfIterationsForBestFMeasure(i + 1);
 					hs.setAbsOffsetBestInitial(harmonyMemory.getBestAbsOffset());
@@ -116,15 +123,14 @@ public class HarmonySearch {
 				hs.setAvgBestPrecision(harmonyMemory.getBestAvgPrecision());
 				hs.setAvgBestRecall(harmonyMemory.getBestAvgRecall());
 				hs.setAvgBestFMeasure(harmonyMemory.getBestAvgFMeasure());
-				if (harmonyParameters.getStopOnOptimum()) {
+				if (harmonyParameters.getStopOnOptimum() && foundOptimum) {
 					break;
 				}
 			}
 			System.out.println(i+1 + ";" + harmonyMemory.getBestIndex() + ";" + harmonyMemory.getBestAvgFMeasure() + ";" + harmonyMemory.getBestAbsOffset());
-			
-
 		}
 		
+		// Set runtime in HarmonyResult object
 		hs.setRuntimeIterations((System.currentTimeMillis() - startIterTime) / 1000.0);
 		return hs;
 	}

@@ -17,12 +17,27 @@ import output.Printer;
 
 public class HarmonyMemory {
 
+	// Parameters with which harmony search is run
 	private HarmonyParameters harmonyParameters;
+	
+	// Solution maps, bUpper and bLower in PropertyBoundaries per sensor
 	private List<Map<String, PropertyBoundaries>> solutions;
+	
+	// f score per solution
 	private List<EvaluationResult>[] fitness;
+	
+	// offset sum per solution
 	private double[] overallOffsets;
+	
+	// List of axis used by this Harmony Search run
 	private List<AxisStream> axisStream;
 
+	
+	/**
+	 * Initialize memory with initial memory solutions, f1 scores and used sensors
+	 * 
+	 * @param params .. initialized memory pre search phase
+	 */
 	public HarmonyMemory(HarmonyParameters params) {
 		this.harmonyParameters = params;
 		axisStream = params.getAxisStreams();
@@ -79,20 +94,28 @@ public class HarmonyMemory {
 		boolean foundOptimum = false;
 		Evaluation eval = Evaluation.instance;
 
+		// get offset and result of worst solution in memory
 		int worstResultIdx = findWorstEvalResult();
 		List<EvaluationResult> worstResult = this.fitness[worstResultIdx];
 		double worstSolutionOffset = this.overallOffsets[worstResultIdx];
 
+		// evaluate new solution
 		List<EvaluationResult> newResult = eval.evaluate(TestData.setUpDataStream(this.axisStream), newSolution, false,
 				harmonyParameters.getStatesToNotEvaluate());
 
+		// calculate absolute offset of new solution
 		double newSolutionOffset = 0;
 		for (Entry<String, PropertyBoundaries> pair : newSolution.entrySet()) {
 			newSolutionOffset += pair.getValue().getLower() + pair.getValue().getUpper();
 		}
 
+		// compare new solution result to worst solution result
 		if (cmpListEvalResults(newResult, newSolutionOffset, worstResult, worstSolutionOffset, false) > 0) {
+			// new solution is better
+			
 			if (harmonyParameters.getPrintMemorySwaps()) {
+				
+				// print swap to console
 				Printer.printHeader("SWAP: Solution " + (worstResultIdx) + " (worst) -> New solution");
 				Map<String, PropertyBoundaries> worstSolution = solutions.get(worstResultIdx);
 				// Get all properties in map
@@ -133,10 +156,12 @@ public class HarmonyMemory {
 						+ newPrec + ", Recall:" + newRec);
 			}
 
+			// add new solution in place of worst solution
 			solutions.set(worstResultIdx, newSolution);
 			fitness[worstResultIdx] = newResult;
 			overallOffsets[worstResultIdx] = newSolutionOffset;
 
+			// check if optimum was found
 			foundOptimum = true;
 			for (int i = 0; i < newResult.size(); i++) {
 				EvaluationResult stateResult = newResult.get(i);

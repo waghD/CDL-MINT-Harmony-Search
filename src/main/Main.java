@@ -28,30 +28,34 @@ import timeSeries.TimeSeriesDatabase;
 
 public class Main {
 
+	// Set Output directory for Test
 	private static final String OUTPUT_DIRECTORY = "../harmonyresult";
 	private static final String TEST_NAME = "test_refactor";
 
 	public static void main(String[] args) {
 		
-		// SetUp all information about the states in the files
+		// SetUp files for Test case
 		setUpDatabase("./lib/Daten_1560.csv", false, 0);
 		Evaluation eval = new Evaluation("./lib/realStates_1560.csv");
 
-		// Test
+		// Define Axis used by Test case
 		AxisStream[] axisArr = { AxisStream.GP, AxisStream.MAP, AxisStream.BP, AxisStream.SAP, AxisStream.WP };
 		List<AxisStream> axisList = new ArrayList<AxisStream>(Arrays.asList(axisArr));
 
 		eval.setUpRealDataStream(axisList);
 		
+		// Create output directory
 		String outputDir = OUTPUT_DIRECTORY + "/" + TEST_NAME;
-		
 		new File(outputDir).mkdirs();
 
 		PrintStream out = null;
+		
+		// Define parameter combinations for test
 		List<Double> accList = new ArrayList<Double>(Arrays.asList(0.9));
 		List<Double> adjList = new ArrayList<Double>(Arrays.asList(0.5));
 		List<Integer> sizeList = new ArrayList<Integer>(Arrays.asList(50));
 		List<Double> bandwidthList = new ArrayList<Double>(Arrays.asList(0.4));
+		
 		DecimalFormat df = new DecimalFormat("#.###");
 		df.setRoundingMode(RoundingMode.CEILING);
 
@@ -64,7 +68,6 @@ public class Main {
 						PrintStream metaFile = null;
 						
 						String fileBase = outputDir + "/" + TEST_NAME + "_" + acc + "_" + adj + "_" + size + "_" + bandwidth;
-						
 						try { 
 							metaFile = new PrintStream(new FileOutputStream(fileBase + "_main" + ".txt", true), true); 
 							System.setOut(metaFile); 
@@ -72,8 +75,6 @@ public class Main {
 							System.err.print(e.getMessage());
 							e.printStackTrace();
 						}
-						  
-						 
 
 						// states NOT to use for evaluation
 						List<String> statesToNotEvaluateList = new ArrayList<String>();
@@ -90,12 +91,16 @@ public class Main {
 						hpa.setLowerSearchBorder(0.0);
 						hpa.setUpperSearchBorder(0.4);
 
+						// Print Harmony Parameters to main file
 						Printer.printHeader("Harmony parameters:");
 						System.out.println(hpa);
 
-						// number of iterations for average calculation
+						// Print Headers for output csv
 						System.out.println("Iteration;AvgFMeasure;AvgPrecision;AvgRecall;IterationBestFMeasure;IterationMinimization");
+						
+						// number of iterations for average calculation
 						for (int i = 0; i < 5; i++) {
+							// Set output stream to file for this run
 							try { 
 								out = new PrintStream(new FileOutputStream(fileBase + "_" + i + ".txt", true), true); 
 								System.setOut(out); 
@@ -103,8 +108,12 @@ public class Main {
 								System.err.print(e.getMessage());
 								e.printStackTrace();
 							}
+							
+							// Run Harmony Search Algorithm
 							HarmonyResult result = runHarmonySearch(hpa);
 							out.close();
+							
+							// Print averages to main file
 							System.setOut(metaFile);
 							System.out.print(i + ";" + result.getAvgBestFMeasure() + ";" + result.getAvgBestPrecision() + ";" + result.getAvgBestRecall() +";"+ result.getNrOfIterationsForBestFMeasure() + ";" + result.getNrOfIterationsForBestMinimizedRange() + "\n");
 							resultList.add(result);
@@ -112,6 +121,7 @@ public class Main {
 
 						System.setOut(metaFile); 
 
+						// Collect results for all runs
 						List<Integer> iterationsFMeasureList = new ArrayList<Integer>();
 						List<Integer> iterationsMinRangeList = new ArrayList<Integer>();
 						List<Double> absOffsetPercDiff = new ArrayList<Double>();
@@ -120,8 +130,6 @@ public class Main {
 						List<Double> avgRecallList = new ArrayList<Double>();
 						List<Double> avgFMeasureList = new ArrayList<Double>();
 						List<Double> timeOverallList = new ArrayList<Double>();
-
-
 						int repetition = 0;
 						for (HarmonyResult res : resultList) {
 							System.out.println("Iterations til best f-measure (Exec. " + repetition + "): " + res.getNrOfIterationsForBestFMeasure() + " ("
@@ -139,8 +147,7 @@ public class Main {
 							repetition++;
 						}
 
-						System.out.println(Printer.div);
-						Printer.printHeader("After all repetitions:");
+						// Calculate averages over all runs
 						double avgIterationsFMeasure = iterationsFMeasureList.stream().mapToInt(x -> x).average().orElse(-1);
 						double avgIterationsMinRange = iterationsMinRangeList.stream().mapToInt(x -> x).average().orElse(-1);
 						double avgAbsOffsetPercDiff = absOffsetPercDiff.stream().mapToDouble(x -> x).average().orElse(-1);
@@ -151,6 +158,9 @@ public class Main {
 						double avgRec = avgRecallList.stream().mapToDouble(x -> x).average().orElse(-1);
 						double avgFMeasure = avgFMeasureList.stream().mapToDouble(x -> x).average().orElse(-1);
 
+						// Print averages to main file
+						System.out.println(Printer.div);
+						Printer.printHeader("After all repetitions:");
 						System.out.println("Iterations til best f-measure (avg): " + avgIterationsFMeasure);
 						System.out.println("Iterations til best minimized range (avg): " + avgIterationsMinRange);
 						System.out.println("Abs Offset Difference (between best f-measure and offset optimized best f-measure), (avg): " + ((1.0-avgAbsOffsetPercDiff)*100.0) + "%");
@@ -184,12 +194,14 @@ public class Main {
 		// Initialize HarmonyMemory with HarmonyParameters
 		HarmonyMemory memory = new HarmonyMemory(hpa);
 
+		// Initialize Harmony Search with Harmony Memory and Parameters
 		HarmonySearch search = new HarmonySearch(memory, hpa);
 
 		// Execute harmony search: If parameter "stopIfOptimumFound" is true,
 		// max number of iterations is still respected (here: max 300 iterations)
 		HarmonyResult hs = search.execHarmonySearch();
 
+		// Print results of this Harmony Search run
 		Printer.printHeader("HARMONY RESULTS");
 
 		System.out.println(hs);
