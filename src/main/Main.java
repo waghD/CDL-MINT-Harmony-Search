@@ -30,13 +30,13 @@ public class Main {
 
 	// Set Output directory for Test
 	private static final String OUTPUT_DIRECTORY = "../harmonyresult";
-	private static final String TEST_NAME = "test_refactor";
+	private static final String TEST_NAME = "test_uc2_mod";
 
 	public static void main(String[] args) {
 		
 		// SetUp files for Test case
-		setUpDatabase("./lib/Daten_1560.csv", false, 0);
-		Evaluation eval = new Evaluation("./lib/realStates_1560.csv");
+		setUpDatabase("./lib/Daten_uc3.csv", false, 0);
+		Evaluation eval = new Evaluation("./lib/realstates_uc3.csv");
 
 		// Define Axis used by Test case
 		AxisStream[] axisArr = { AxisStream.GP, AxisStream.MAP, AxisStream.BP, AxisStream.SAP, AxisStream.WP };
@@ -84,7 +84,7 @@ public class Main {
 						HarmonyParameters hpa = new HarmonyParameters(adj, bandwidth, acc, size, axisList);
 						hpa.setPrintNewSolutions(false);
 						hpa.setPrintMemorySwaps(false);
-						hpa.setNrOfIterations(500);
+						hpa.setNrOfIterations(10000);
 						hpa.setStopOnOptimum(false);
 						hpa.setStatesToNotEvaluate(statesToNotEvaluateList);
 						hpa.setMinimizeResult(true);
@@ -99,7 +99,7 @@ public class Main {
 						System.out.println("Iteration;AvgFMeasure;AvgPrecision;AvgRecall;IterationBestFMeasure;IterationMinimization");
 						
 						// number of iterations for average calculation
-						for (int i = 0; i < 5; i++) {
+						for (int i = 0; i < 1; i++) {
 							// Set output stream to file for this run
 							try { 
 								out = new PrintStream(new FileOutputStream(fileBase + "_" + i + ".txt", true), true); 
